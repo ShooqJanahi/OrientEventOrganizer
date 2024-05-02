@@ -1,5 +1,5 @@
 <?php
-//hello
+//hello world
 class Login extends Users {
     public $ok;
     public $salt;
