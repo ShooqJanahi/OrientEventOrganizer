@@ -1,5 +1,5 @@
 <?php
-//test12345
+//hello
 class Login extends Users {
     public $ok;
     public $salt;
