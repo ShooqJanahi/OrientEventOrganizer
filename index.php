@@ -9,7 +9,7 @@
       <meta name="viewport" content="width=device-width, initial-scale=1">
       <meta name="viewport" content="initial-scale=1, maximum-scale=1">
       <!-- site metas -->
-      <title>Coffo</title>
+      <title>Orient Event Organizer</title>
       <meta name="keywords" content="">
       <meta name="description" content="">
       <meta name="author" content="">
@@ -45,7 +45,7 @@
                         <a class="nav-link" href="about.php">About</a>
                      </li>
                      <li class="nav-item">
-                        <a class="nav-link" href="coffees.php">Coffees</a>
+                        <a class="nav-link" href="Events.php">Events</a>
                      </li>
                      <li class="nav-item">
                         <a class="nav-link" href="shop.php">Shop</a>
@@ -77,8 +77,8 @@
                         <div class="row">
                            <div class="col-md-12">
                               <div class="banner_taital_main">
-                                 <h1 class="banner_taital">Coffee <br>Shop</h1>
-                                 <p class="banner_text">more-or-less normal distribution of letters, as opposed to using </p>
+                                 <h1 class="banner_taital">Orient Event <br>Organizer</h1>
+                                 <p class="banner_text">organization of events and management of services</p>
                                  <div class="btn_main">
                                     <div class="about_bt active"><a href="#">About Us</a></div>
                                     <div class="callnow_bt"><a href="#">Call Now</a></div>
@@ -91,8 +91,8 @@
                         <div class="row">
                            <div class="col-md-12">
                               <div class="banner_taital_main">
-                                 <h1 class="banner_taital">Coffee <br>Shop</h1>
-                                 <p class="banner_text">more-or-less normal distribution of letters, as opposed to using </p>
+                                 <h1 class="banner_taital">Orient Event <br>Organizer</h1>
+                                 <p class="banner_text">organization of events and management of services</p>
                                  <div class="btn_main">
                                     <div class="about_bt active"><a href="#">About Us</a></div>
                                     <div class="callnow_bt"><a href="#">Call Now</a></div>
@@ -105,8 +105,8 @@
                         <div class="row">
                            <div class="col-md-12">
                               <div class="banner_taital_main">
-                                 <h1 class="banner_taital">Coffee <br>Shop</h1>
-                                 <p class="banner_text">more-or-less normal distribution of letters, as opposed to using </p>
+                                 <h1 class="banner_taital">Orient Event <br>Organizer</h1>
+                                 <p class="banner_text">organization of events and management of services</p>
                                  <div class="btn_main">
                                     <div class="about_bt active"><a href="#">About Us</a></div>
                                     <div class="callnow_bt"><a href="#">Call Now</a></div>
