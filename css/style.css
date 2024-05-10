@@ -1078,3 +1078,7 @@ textarea#comment.update_mail::placeholder {
 .margin_top90 {
     margin-top: 90px;
 }
+.carousel-item img {
+  width: 70%;
+  height: auto;
+}

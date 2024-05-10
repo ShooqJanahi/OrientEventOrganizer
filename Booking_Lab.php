@@ -9,7 +9,7 @@
       <meta name="viewport" content="width=device-width, initial-scale=1">
       <meta name="viewport" content="initial-scale=1, maximum-scale=1">
       <!-- site metas -->
-      <title>Coffees</title>
+      <title>Booking an Event</title>
       <meta name="keywords" content="">
       <meta name="description" content="">
       <meta name="author" content="">
@@ -27,13 +27,6 @@
       <link rel="stylesheet" href="css/jquery.mCustomScrollbar.min.css">
       <!-- Tweaks for older IEs-->
       <link rel="stylesheet" href="https://netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css">
-      <script>
-        document.addEventListener('DOMContentLoaded', function() {
-          document.getElementById('BookanEvent').addEventListener('click', function() {
-            window.location.href = 'Booking_30.php';
-          });
-        });
-      </script>
    </head>
    <body>
       <div class="header_section header_bg">
@@ -82,28 +75,47 @@
          <div class="container">
             <div class="row">
                <div class="col-md-12">
-                  <h1 class="coffee_taital">OUR EVENTS</h1>
+                  <h1 class="coffee_taital">Booking an Event</h1>
                </div>
             </div>
          </div>
          <div class="coffee_section_2">
-            <div id="main_slider" class="carousel slide" data-ride="carousel">
-                <div>
-                    <input type="submit" value="Book an event" id="BookanEvent" />
-                </div>
-               <!-- <script>
-                      document.getElementById('BookanEvent').addEventListener('click', function() {
-                        window.location.href = 'Booking.php';
-                      });
-                    </script>-->
+           <!-- <div id="main_slider" class="carousel slide" data-ride="carousel">
+                <div><img src="images/Main-Scroll-2.jpg"></div>
+                <div><img src="images/Main-Scroll-3.jpg"></div
+            </div>-->
+           
+           <div id="main_slider" class="carousel slide" data-ride="carousel">
+  <!-- Slider Images -->
+  <div class="carousel-inner">
+    <div class="carousel-item active">
+      <img src="images/about-img.png" alt="Slide 1">
+    </div>
+    <div class="carousel-item">
+      <img src="images/Main-Scroll-2.jpg" alt="Slide 2">
+    </div>
+    <div class="carousel-item">
+      <img src="images/banner-img.png" alt="Slide 3">
+    </div>
+  </div>
 
-                
+  <!-- Navigation Buttons -->
+  <a class="carousel-control-prev" href="#main_slider" role="button" data-slide="prev">
+    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+    <span class="sr-only">Previous</span>
+  </a>
+  <a class="carousel-control-next" href="#main_slider" role="button" data-slide="next">
+    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+    <span class="sr-only">Next</span>
+  </a>
+</div>
+           
               <!--<div class="carousel-inner">
                   <div class="carousel-item active">
                      <div class="container-fluid">
                         <div class="row">
                            <div class="col-lg-3 col-md-6">
-                              <div class="coffee_img"><img src="images/img-1.png"></div>
+                              <div class="coffee_img"><img src="images/Main-Scroll-2.jpg"></div>
                               <div class="coffee_box">
                                  <h3 class="types_text">TYPES OF COFFEE</h3>
                                  <p class="looking_text">looking at its layout. The point of</p>
