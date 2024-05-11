@@ -1,4 +1,23 @@
-<!DOCTYPE html>
+<?php 
+
+
+if (isset($_POST['submitted'])) {
+
+    $search = trim($_POST['Search']);
+    $result = new Search();
+   
+
+    if (isset($_POST['showRank']) && $_POST['showRank'] == 'show'){
+        $showRank = true;
+        $result->ShowHalls($searcg,true);
+    }else{
+        $showRank = false;
+     $result->ShowHalls($searcg,false);
+    }
+
+}
+?>
+
 <html>
    <head>
       <!-- basic -->
@@ -91,6 +110,52 @@
                 <div>
                     <input type="submit" value="Book an event" id="BookanEvent" />
                 </div>
+                
+                  <h2>Event Search</h2>
+    <form method="POST" action="search.php">
+        <label for="start_date">Start Date:</label>
+            <script>
+        function calculateEndDate() {
+            var startDate = new Date(document.getElementById("start_date").value);
+            var duration = parseInt(document.getElementById("duration").value);
+            var endDate = new Date(startDate);
+            endDate.setDate(startDate.getDate() + duration);
+            var formattedEndDate = endDate.toISOString().slice(0,10);
+            document.getElementById("end_date").value = formattedEndDate;
+        }
+    </script>
+        <input type="date" id="start_date" name="start_date" onchange="calculateEndDate()" required><br><br>
+
+        <label for="duration">Duration:</label>
+        <select id="duration" name="duration" onchange="calculateEndDate()" required>
+            <option value="1">1 Day</option>
+            <option value="7">1 Week</option>
+            <option value="15">15 Days</option>
+        </select><br><br>
+
+        <label for="end_date">End Date:</label>
+        <input type="date" id="end_date" name="end_date" readonly><br><br>
+
+        <label for="event_time_from">Event Time (From):</label>
+        <input type="time" id="event_time_from" name="event_time_from" required>
+        
+        <label for="event_time_to">Event Time (To):</label>
+        <input type="time" id="event_time_to" name="event_time_to" required><br><br>
+
+        <label for="audience">Number of Audience:</label>
+        <input type="number" id="audience" name="audience" required><br><br>
+
+        <label for="search_term">Search Halls:</label>
+        <!--<input type="text" id="search_term" name="search_term" placeholder="Search by name or description" required>-->
+         <input type="search" name="Search" placeholder="Search by name or description" size="50" value="<?php echo $_POST['Search'] ?>"/>
+        Show rankings?
+        <input type="checkbox" name="showRank" value="show" /><br><br>
+        <select id="hall_list" name="hall_list">
+            <!-- Options will be populated dynamically based on search results -->
+        </select><br><br>
+
+        <input type="submit" value="Search">
+    </form>
                <!-- <script>
                       document.getElementById('BookanEvent').addEventListener('click', function() {
                         window.location.href = 'Booking.php';
