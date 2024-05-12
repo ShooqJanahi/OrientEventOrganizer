@@ -60,7 +60,7 @@
                   <form class="form-inline my-2 my-lg-0">
                      <div class="login_bt">
                         <ul>
-                           <li><a href="#"><span class="user_icon"><i class="fa fa-user" aria-hidden="true"></i></span>Login</a></li>
+                           <li><a href="Register.php"><span class="user_icon"><i class="fa fa-user" aria-hidden="true" ></i></span>Login</a></li>
                            <li><a href="#"><i class="fa fa-search" aria-hidden="true"></i></a></li>
                         </ul>
                      </div>
@@ -394,7 +394,7 @@
          <div class="container">
             <div class="row">
                <div class="col-sm-12">
-                  <h1 class="contact_taital">Get In Touch</h1>
+                  <h1 class="contact_taital">LogIn Form</h1>
                </div>
             </div>
          </div>
@@ -403,11 +403,10 @@
                <div class="row">
                   <div class="col-md-12">
                      <div class="mail_section_1">
-                        <input type="text" class="mail_text" placeholder="Your Name" name="Your Name">
-                        <input type="text" class="mail_text" placeholder="Your Email" name="Your Email">
+                        <input type="text" class="mail_text" placeholder="Enter Username" name="Username">
+                        <input type="text" class="mail_text" placeholder="Enter Password" name="Password">
                         <input type="text" class="mail_text" placeholder="Your Phone" name="Your Phone">
-                        <textarea class="massage-bt" placeholder="Massage" rows="5" id="comment" name="Massage"></textarea>
-                        <div class="send_bt"><a href="#">Send</a></div>
+                        <div class="send_bt"><a href="index.php">LogIn</a></div>
                      </div>
                   </div>
                   <div class="map_main">

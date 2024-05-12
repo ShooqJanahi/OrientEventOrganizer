@@ -39,13 +39,9 @@ class Login extends Users {
         if ($this->getUserId() != null && $this->getUserId() == $userId) {
             $this->ok = true;
             $_SESSION['userId'] = $this->getUserId();
-            $_SESSION['userType'] = $this->getUserType();
-            $_SESSION['firstName'] = $this->getFirstName();
-            $_SESSION['lastName'] = $this->getLastName();
+            $_SESSION['username'] = $this->getUsername();
             setcookie('userId', $_SESSION['userId'], time() + 60 * 60 * 24 * 7, '/', $this->domain);
-            setcookie('userType', $_SESSION['userType'], time() + 60 * 60 * 24 * 7, '/', $this->domain);
-            setcookie('firstName', $_SESSION['firstName'], time() + 60 * 60 * 24 * 7, '/', $this->domain);
-            setcookie('lastName', $_SESSION['lastName'], time() + 60 * 60 * 24 * 7, '/', $this->domain);
+            setcookie('username', $_SESSION['username'], time() + 60 * 60 * 24 * 7, '/', $this->domain);
             return true;
         } else {
             $error[] = 'Wrong Username';
@@ -59,13 +55,9 @@ class Login extends Users {
             if ($this->getUserId() != null) {
                 $this->ok = true;
                 $_SESSION['userId'] = $this->getUserId();
-                $_SESSION['userType'] = $this->getUserType();
-                $_SESSION['firstName'] = $this->getFirstName();
-                $_SESSION['lastName'] = $this->getLastName();
+                $_SESSION['username'] = $this->getUsername();
                 setcookie('userId', $_SESSION['userId'], time() + 60 * 60 * 24 * 7, '/', $this->domain);
-                setcookie('userType', $_SESSION['userType'], time() + 60 * 60 * 24 * 7, '/', $this->domain);
-                setcookie('firstName', $_SESSION['firstName'], time() + 60 * 60 * 24 * 7, '/', $this->domain);
-                setcookie('lastName', $_SESSION['lastName'], time() + 60 * 60 * 24 * 7, '/', $this->domain);
+                setcookie('username', $_SESSION['username'], time() + 60 * 60 * 24 * 7, '/', $this->domain);
                 return true;
             } else {
                 $error[] = 'Wrong Username OR password';
@@ -80,13 +72,9 @@ class Login extends Users {
     function logout() {
         $this->ok = false;
         $_SESSION['userId'] = '';
-        $_SESSION['userType'] = '';
-        $_SESSION['firstName'] = '';
-        $_SESSION['lastName'] = '';
+        $_SESSION['username'] = '';
         setcookie('userId', '', time() - 3600, '/', $this->domain);
-        setcookie('userType', '', time() - 3600, '/', $this->domain);
-        setcookie('firstName', '', time() - 3600, '/', $this->domain);
-        setcookie('lastName', '', time() - 3600, '/', $this->domain);
+        setcookie('username', '', time() - 3600, '/', $this->domain);
         session_destroy();
     }
 }
