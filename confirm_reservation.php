@@ -1,4 +1,6 @@
 <?php
+
+
 // confirm_reservation.php
 session_start();
 
@@ -62,4 +64,3 @@ $discounted_cost = calculate_discount($client_status, $total_cost);
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </body>
 </html>
-

@@ -27,6 +27,9 @@
       <link rel="stylesheet" href="css/jquery.mCustomScrollbar.min.css">
       <!-- Tweaks for older IEs-->
       <link rel="stylesheet" href="https://netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css">
+      
+   
+  
    </head>
    <body>
       <div class="header_section header_bg">
@@ -77,6 +80,7 @@
                <div class="col-md-12">
                   <h1 class="coffee_taital">Booking an Event</h1>
                </div>
+                
             </div>
          </div>
          <div class="coffee_section_2">
@@ -94,9 +98,9 @@
     <div class="carousel-item">
       <img src="images/Main-Scroll-2.jpg" alt="Slide 2">
     </div>
-    <div class="carousel-item">
+   <!-- <div class="carousel-item">
       <img src="images/banner-img.png" alt="Slide 3">
-    </div>
+    </div>-->
   </div>
 
   <!-- Navigation Buttons -->
@@ -109,6 +113,286 @@
     <span class="sr-only">Next</span>
   </a>
 </div>
+           
+           
+             
+     <h1>Booking/Reservation</h1>
+
+    <h2>Hall Details</h2>
+    <!-- Display the selected Hall picture, description, and rental details -->
+
+    <h2>Event Details</h2>
+    <!-- Display the selected date range and audience details -->
+
+    <form action="confirm_booking.php" method="post">
+        <!-- Add any necessary form fields for confirming the details -->
+        <div class="callnow_bt"> <a> <input type="submit" name="update" value="Update Details"></a></div><br>
+        <input type="submit" name="proceed" value="Proceed"><br>
+        <input type="submit" name="cancel" value="Cancel">
+    </form>
+           </div>
+          <?php
+// Check if the form is submitted
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (isset($_POST['update'])) {
+        // Redirect to the update page for modifying the details
+        header('Location: update_booking.php');
+        exit();
+    } elseif (isset($_POST['proceed'])) {
+        // Process the booking and proceed to select catering or other services
+        // Add your booking logic here
+        
+        // Redirect to the service selection page
+        header('Location: select_services.php');
+        exit();
+    } elseif (isset($_POST['cancel'])) {
+        // Redirect back to the main page
+        header('Location: main_page.php');
+        exit();
+    }
+}
+?>
+           <!-- HTML Form -->
+<form id="bookingForm">
+  <button type="button" onclick="proceedBooking()">Proceed</button>
+  <button type="button" onclick="cancelBooking()">Cancel</button>
+</form>
+
+<!-- Catering Modal -->
+<div id="cateringModal" style="display: none;">
+  <h2>Catering Options</h2>
+  <label for="cateringSelection">Select Catering:</label>
+  
+  
+  
+<input type="checkbox" id="noneCheckbox" name="cateringSelection" value="none">
+<label for="noneCheckbox">None</label><br>
+<input type="checkbox" id="breakfastCheckbox" name="cateringSelection" value="breakfast">
+<label for="breakfastCheckbox">Breakfast</label><br>
+<input type="checkbox" id="lunchCheckbox" name="cateringSelection" value="lunch">
+<label for="lunchCheckbox">Lunch</label><br>
+<input type="checkbox" id="hotBeveragesCheckbox" name="cateringSelection" value="hotBeverages">
+<label for="hotBeveragesCheckbox">Hot Beverages</label><br>
+<input type="checkbox" id="coldBeveragesCheckbox" name="cateringSelection" value="coldBeverages">
+<label for="coldBeveragesCheckbox">Cold Beverages</label><br>
+
+<div id="menuDetails" style="display: none;">
+  <h3>Selected Catering:</h3>
+  <h4>Breakfast: <span id="breakfastPrice">0</span> BD per person</h4>
+  <ul id="breakfastList"></ul>
+  <h4>Lunch: <span id="lunchPrice">0</span> BD per person</h4>
+  <ul id="lunchList"></ul>
+  <h4>Hot Beverages: <span id="hotBeveragesPrice">0</span> BD per person</h4>
+  <ul id="hotBeveragesList"></ul>
+  <h4>Cold Beverages: <span id="coldBeveragesPrice">0</span> BD per person</h4>
+  <ul id="coldBeveragesList"></ul>
+</div>
+  
+<!----------------------------------->
+  <br>
+  <div id="menuDetails" style="display: none;">
+    <h4>Menu Details:</h4>
+    <div id="menuContent"></div>
+  </div>
+  <br>
+  <button type="button" onclick="confirmCatering()">Confirm</button>
+  <button type="button" onclick="cancelCatering()">Cancel</button>
+</div>
+
+<!-- JavaScript -->
+<script>
+function proceedBooking() {
+
+    // Show the catering modal
+    document.getElementById("cateringModal").style.display = "block";
+    
+    // Reset the catering selection dropdown
+    document.getElementById("cateringSelection").selectedIndex = -1;
+  
+}
+
+function cancelBooking() {
+  window.location.href = "index.php";
+}
+
+
+
+// Add an event listener to each checkbox
+var cateringSelection = document.getElementsByName("cateringSelection");
+for (var i = 0; i < cateringSelection.length; i++) {
+  cateringSelection[i].addEventListener("change", confirmCatering);
+}
+
+function confirmCatering() {
+  var selectedCatering = [];
+
+  for (var i = 0; i < cateringSelection.length; i++) {
+    if (cateringSelection[i].checked) {
+      selectedCatering.push(cateringSelection[i].value);
+    }
+  }
+
+  var menuDetails = document.getElementById("menuDetails");
+  menuDetails.innerHTML = "";
+
+  if (selectedCatering.length > 0) {
+    menuDetails.innerHTML = "<h3>Selected Catering:</h3>";
+
+    var totalPrice = 0;
+
+    for (var j = 0; j < selectedCatering.length; j++) {
+      var option = selectedCatering[j];
+      var price = 0;
+      var listItem = "";
+
+      if (option === "breakfast") {
+        price = 5;
+        listItem = "<li>Croissant</li>" +
+                   "<li>Scrambled Eggs</li>" +
+                   "<li>Fruit Salad</li>";
+      } else if (option === "lunch") {
+        price = 8;
+        listItem = "<li>Sandwiches</li>" +
+                   "<li>Salad</li>" +
+                   "<li>Soup</li>";
+      } else if (option === "hotBeverages") {
+        price = 2;
+        listItem = "<li>Coffee</li>" +
+                   "<li>Tea</li>" +
+                   "<li>Hot Chocolate</li>";
+      } else if (option === "coldBeverages") {
+        price = 3;
+        listItem = "<li>Iced Tea</li>" +
+                   "<li>Lemonade</li>" +
+                   "<li>Soda</li>";
+      }
+
+      if (listItem !== "") {
+        menuDetails.innerHTML +=
+          "<h4>" + capitalizeFirstLetter(option) + "</h4>" +
+          "<ul>" + listItem + "</ul>" +
+          "<p>Price per person: " + price + " BD</p>";
+        totalPrice += price;
+      }
+    }
+
+    menuDetails.innerHTML += "<h4>Total Price: " + totalPrice*30 + " BD</h4>";
+  }
+
+  menuDetails.style.display = selectedCatering.length > 0 ? "block" : "none";
+}
+
+function capitalizeFirstLetter(string) {
+  return string.charAt(0).toUpperCase() + string.slice(1);
+}
+/*function confirmCatering() {
+  var cateringSelection = document.getElementsByName("cateringSelection");
+  var selectedCatering = [];
+
+  for (var i = 0; i < cateringSelection.length; i++) {
+    if (cateringSelection[i].checked) {
+      selectedCatering.push(cateringSelection[i].value);
+    }
+  }
+
+  if (selectedCatering.length > 0) {
+    var menuDetails = document.getElementById("menuDetails");
+    menuDetails.innerHTML = "<h3>Selected Catering:</h3>";
+
+    for (var j = 0; j < selectedCatering.length; j++) {
+      var option = selectedCatering[j];
+      var price = 0;
+      var listItem = "";
+
+      if (option === "breakfast") {
+        price = 5;
+        listItem = "<li>Croissant</li>" +
+                   "<li>Scrambled Eggs</li>" +
+                   "<li>Fruit Salad</li>";
+      } else if (option === "lunch") {
+        price = 8;
+        listItem = "<li>Sandwiches</li>" +
+                   "<li>Salad</li>" +
+                   "<li>Soup</li>";
+      } else if (option === "hotBeverages") {
+        price = 2;
+        listItem = "<li>Coffee</li>" +
+                   "<li>Tea</li>" +
+                   "<li>Hot Chocolate</li>";
+      } else if (option === "coldBeverages") {
+        price = 3;
+        listItem = "<li>Iced Tea</li>" +
+                   "<li>Lemonade</li>" +
+                   "<li>Soda</li>";
+      }
+
+      if (listItem !== "") {
+        menuDetails.innerHTML +=
+          "<h4>" + capitalizeFirstLetter(option) + "</h4>" +
+          "<ul>" + listItem + "</ul>";
+      }
+    }
+
+    menuDetails.innerHTML += "<h4>Price: " + getPriceText(selectedCatering) + " BD per person</h4>";
+    menuDetails.style.display = "block";
+  }
+}
+
+function capitalizeFirstLetter(string) {
+  return string.charAt(0).toUpperCase() + string.slice(1);
+}*/
+
+function getPriceText(selectedCatering) {
+  var priceMap = {
+    breakfast: 5,
+    lunch: 8,
+    hotBeverages: 2,
+    coldBeverages: 3
+  };
+  var totalPrice = 0;
+  
+  for (var i = 0; i < selectedCatering.length; i++) {
+    var option = selectedCatering[i];
+    if (priceMap.hasOwnProperty(option)) {
+      totalPrice += priceMap[option];
+    }
+  }
+
+  return totalPrice;
+}
+
+
+function cancelCatering() {
+  document.getElementById("cateringModal").style.display = "none";
+}
+
+// Example function to retrieve menu details based on the selected option
+function getMenuDetails(cateringSelection) {
+  var menuDetails = [];
+
+  if (cateringSelection === "breakfast") {
+    menuDetails.push({ name: "Breakfast Option 1", price: 10 });
+    menuDetails.push({ name: "Breakfast Option 2", price: 12 });
+  } else if (cateringSelection === "lunch") {
+    menuDetails.push({ name: "Lunch Option 1", price: 15 });
+    menuDetails.push({ name: "Lunch Option 2", price: 18 });
+  } else if (cateringSelection === "hotBeverages") {
+    menuDetails.push({ name: "Hot Beverage 1", price: 3 });
+    menuDetails.push({ name: "Hot Beverage 2", price: 4 });
+  } else if (cateringSelection === "coldBeverages") {
+    menuDetails.push({ name: "Cold Beverage 1", price: 2 });
+    menuDetails.push({ name: "Cold Beverage 2", price: 3 });
+  }
+
+  return menuDetails;
+}
+
+// Add event listener for the "Proceed" button click event
+document.getElementById("bookingForm").addEventListener("submit", function(event) {
+  event.preventDefault(); // Prevent form submission
+  proceedBooking();
+});
+</script>
            
               <!--<div class="carousel-inner">
                   <div class="carousel-item active">

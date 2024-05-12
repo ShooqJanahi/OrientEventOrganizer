@@ -1,78 +1,15 @@
+
+<?php
+include 'header.html';
+?>
 <!DOCTYPE html>
 <html>
    <head>
-      <!-- basic -->
-      <meta charset="utf-8">
-      <meta http-equiv="X-UA-Compatible" content="IE=edge">
-      <meta name="viewport" content="width=device-width, initial-scale=1">
-      <!-- mobile metas -->
-      <meta name="viewport" content="width=device-width, initial-scale=1">
-      <meta name="viewport" content="initial-scale=1, maximum-scale=1">
-      <!-- site metas -->
-      <title>Booking an Event</title>
-      <meta name="keywords" content="">
-      <meta name="description" content="">
-      <meta name="author" content="">
-      <!-- bootstrap css -->
-      <link rel="stylesheet" type="text/css" href="css/bootstrap.min.css">
-      <!-- style css -->
-      <link rel="stylesheet" type="text/css" href="css/style.css">
-      <!-- Responsive-->
-      <link rel="stylesheet" href="css/responsive.css">
-      <!-- fevicon -->
-      <link rel="icon" href="images/fevicon.png" type="image/gif" />
-      <!-- font css -->
-      <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
-      <!-- Scrollbar Custom CSS -->
-      <link rel="stylesheet" href="css/jquery.mCustomScrollbar.min.css">
-      <!-- Tweaks for older IEs-->
-      <link rel="stylesheet" href="https://netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css">
-      
-   
+       <title>Booking an Event</title>
   
    </head>
    <body>
-      <div class="header_section header_bg">
-         <div class="container">
-            <nav class="navbar navbar-expand-lg navbar-light bg-light">
-               <a class="navbar-brand"href="index.html"><img src="images/logo.png"></a>
-               <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-               <span class="navbar-toggler-icon"></span>
-               </button>
-               <div class="collapse navbar-collapse" id="navbarSupportedContent">
-                  <ul class="navbar-nav ml-auto">
-                     <li class="nav-item active">
-                        <a class="nav-link" href="index.php">Home</a>
-                     </li>
-                     <li class="nav-item">
-                        <a class="nav-link" href="about.php">About</a>
-                     </li>
-                     <li class="nav-item">
-                        <a class="nav-link" href="Events.php">EVENTS</a>
-                     </li>
-                     <li class="nav-item">
-                        <a class="nav-link" href="shop.php">Shop</a>
-                     </li>
-                     <li class="nav-item">
-                        <a class="nav-link" href="blog.php">Blog</a>
-                     </li>
-                     <li class="nav-item">
-                        <a class="nav-link" href="contact.php">Contact</a>
-                     </li>
-                  </ul>
-                  <form class="form-inline my-2 my-lg-0">
-                     <div class="login_bt">
-                        <ul>
-                           <li><a href="#"><span class="user_icon"><i class="fa fa-user" aria-hidden="true"></i></span>Login</a></li>
-                           <li><a href="#"><i class="fa fa-search" aria-hidden="true"></i></a></li>
-                        </ul>
-                     </div>
-                  </form>
-               </div>
-            </nav>
-         </div>
-      </div>
-      <!-- header section end -->
+    
       <!-- coffee section start -->
       <div class="coffee_section layout_padding">
          <div class="container">
@@ -80,7 +17,6 @@
                <div class="col-md-12">
                   <h1 class="coffee_taital">Booking an Event</h1>
                </div>
-                
             </div>
          </div>
          <div class="coffee_section_2">
@@ -96,7 +32,7 @@
       <img src="images/about-img.png" alt="Slide 1">
     </div>
     <div class="carousel-item">
-      <img src="images/Main-Scroll-2.jpg" alt="Slide 2">
+      <img src="images/banner-bg.jpg" alt="Slide 2">
     </div>
    <!-- <div class="carousel-item">
       <img src="images/banner-img.png" alt="Slide 3">
@@ -114,44 +50,6 @@
   </a>
 </div>
            
-           
-             
-     <h1>Booking/Reservation</h1>
-
-    <h2>Hall Details</h2>
-    <!-- Display the selected Hall picture, description, and rental details -->
-
-    <h2>Event Details</h2>
-    <!-- Display the selected date range and audience details -->
-
-    <form action="confirm_booking.php" method="post">
-        <!-- Add any necessary form fields for confirming the details -->
-        <div class="callnow_bt"> <a> <input type="submit" name="update" value="Update Details"></a></div><br>
-        <input type="submit" name="proceed" value="Proceed"><br>
-        <input type="submit" name="cancel" value="Cancel">
-    </form>
-           </div>
-          <?php
-// Check if the form is submitted
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    if (isset($_POST['update'])) {
-        // Redirect to the update page for modifying the details
-        header('Location: update_booking.php');
-        exit();
-    } elseif (isset($_POST['proceed'])) {
-        // Process the booking and proceed to select catering or other services
-        // Add your booking logic here
-        
-        // Redirect to the service selection page
-        header('Location: select_services.php');
-        exit();
-    } elseif (isset($_POST['cancel'])) {
-        // Redirect back to the main page
-        header('Location: main_page.php');
-        exit();
-    }
-}
-?>
            <!-- HTML Form -->
 <form id="bookingForm">
   <button type="button" onclick="proceedBooking()">Proceed</button>
@@ -285,62 +183,6 @@ function confirmCatering() {
 function capitalizeFirstLetter(string) {
   return string.charAt(0).toUpperCase() + string.slice(1);
 }
-/*function confirmCatering() {
-  var cateringSelection = document.getElementsByName("cateringSelection");
-  var selectedCatering = [];
-
-  for (var i = 0; i < cateringSelection.length; i++) {
-    if (cateringSelection[i].checked) {
-      selectedCatering.push(cateringSelection[i].value);
-    }
-  }
-
-  if (selectedCatering.length > 0) {
-    var menuDetails = document.getElementById("menuDetails");
-    menuDetails.innerHTML = "<h3>Selected Catering:</h3>";
-
-    for (var j = 0; j < selectedCatering.length; j++) {
-      var option = selectedCatering[j];
-      var price = 0;
-      var listItem = "";
-
-      if (option === "breakfast") {
-        price = 5;
-        listItem = "<li>Croissant</li>" +
-                   "<li>Scrambled Eggs</li>" +
-                   "<li>Fruit Salad</li>";
-      } else if (option === "lunch") {
-        price = 8;
-        listItem = "<li>Sandwiches</li>" +
-                   "<li>Salad</li>" +
-                   "<li>Soup</li>";
-      } else if (option === "hotBeverages") {
-        price = 2;
-        listItem = "<li>Coffee</li>" +
-                   "<li>Tea</li>" +
-                   "<li>Hot Chocolate</li>";
-      } else if (option === "coldBeverages") {
-        price = 3;
-        listItem = "<li>Iced Tea</li>" +
-                   "<li>Lemonade</li>" +
-                   "<li>Soda</li>";
-      }
-
-      if (listItem !== "") {
-        menuDetails.innerHTML +=
-          "<h4>" + capitalizeFirstLetter(option) + "</h4>" +
-          "<ul>" + listItem + "</ul>";
-      }
-    }
-
-    menuDetails.innerHTML += "<h4>Price: " + getPriceText(selectedCatering) + " BD per person</h4>";
-    menuDetails.style.display = "block";
-  }
-}
-
-function capitalizeFirstLetter(string) {
-  return string.charAt(0).toUpperCase() + string.slice(1);
-}*/
 
 function getPriceText(selectedCatering) {
   var priceMap = {
@@ -520,62 +362,11 @@ document.getElementById("bookingForm").addEventListener("submit", function(event
          </div>
       </div>
       <!-- coffee section end -->
-      <!-- footer section start -->
-      <div class="footer_section layout_padding margin_top90">
-         <div class="container">
-            <div class="row">
-               <div class="col-md-12">
-                  <div class="footer_social_icon">
-                     <ul>
-                        <li><a href="#"><i class="fa fa-facebook" aria-hidden="true"></i></a></li>
-                        <li><a href="#"><i class="fa fa-twitter" aria-hidden="true"></i></a></li>
-                        <li><a href="#"><i class="fa fa-linkedin" aria-hidden="true"></i></a></li>
-                        <li><a href="#"><i class="fa fa-instagram" aria-hidden="true"></i></a></li>
-                     </ul>
-                  </div>
-                  <div class="location_text">
-                     <ul>
-                        <li>
-                           <a href="#">
-                           <i class="fa fa-phone" aria-hidden="true"></i><span class="padding_left_10">+01 1234567890</span>
-                           </a>
-                        </li>
-                        <li>
-                           <a href="#">
-                           <i class="fa fa-envelope" aria-hidden="true"></i><span class="padding_left_10">demo@gmail.com</span>
-                           </a>
-                        </li>
-                     </ul>
-                  </div>
-                  <div class="form-group">
-                     <textarea class="update_mail" placeholder="Your Email" rows="5" id="comment" name="Your Email"></textarea>
-                     <div class="subscribe_bt"><a href="#"><i class="fa fa-arrow-right" aria-hidden="true"></i></a></div>
-                  </div>
-               </div>
-            </div>
-         </div>
-      </div>
-      <!-- footer section end -->
-      <!-- copyright section start -->
-      <div class="copyright_section">
-         <div class="container">
-            <div class="row">
-               <div class="col-sm-12">
-                  <p class="copyright_text">2020 All Rights Reserved. Design by <a href="https://html.design">Free Html Templates</a>
-                     Distribution by <a href="https://themewagon.com">ThemeWagon</a></p>
-               </div>
-            </div>
-         </div>
-      </div>
-      <!-- copyright section end -->
-      <!-- Javascript files-->
-      <script src="js/jquery.min.js"></script>
-      <script src="js/popper.min.js"></script>
-      <script src="js/bootstrap.bundle.min.js"></script>
-      <script src="js/jquery-3.0.0.min.js"></script>
-      <script src="js/plugin.js"></script>
-      <!-- sidebar -->
-      <script src="js/jquery.mCustomScrollbar.concat.min.js"></script>
-      <script src="js/custom.js"></script>
+      
+  
    </body>
 </html>
+
+<?php
+include 'footer.html';
+?>
