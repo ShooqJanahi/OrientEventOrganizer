@@ -28,69 +28,7 @@
       <!-- Tweaks for older IEs-->
       <link rel="stylesheet" href="https://netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css">
       
-     <style>
-    /* CSS styles */
-
-    .modal {
-      display: none;
-      position: fixed;
-      z-index: 1;
-      left: 0;
-      top: 0;
-      width: 100%;
-      height: 100%;
-      overflow: auto;
-      background-color: rgba(0, 0, 0, 0.4);
-    }
-
-    .modal-content {
-      background-color: #fefefe;
-      margin: 15% auto;
-      padding: 20px;
-      border: 1px solid #888;
-      width: 80%;
-      max-width: 500px;
-      border-radius: 5px;
-    }
-
-    .modal-content h2 {
-      margin-top: 0;
-    }
-
-    .modal-content p {
-      margin-bottom: 10px;
-    }
-
-    .modal-content ul {
-      list-style: none;
-      padding: 0;
-    }
-
-    .modal-content li {
-      margin-bottom: 5px;
-    }
-
-    .modal-content label {
-      margin-left: 5px;
-    }
-
-    .modal-content button {
-      margin-top: 10px;
-    }
-
-    #menuDetails {
-      display: none;
-      margin-top: 20px;
-    }
-
-    #menuDetails h4 {
-      margin-top: 0;
-    }
-
-    #menuContent p {
-      margin-bottom: 5px;
-    }
-  </style>
+   
   
    </head>
    <body>
@@ -142,6 +80,7 @@
                <div class="col-md-12">
                   <h1 class="coffee_taital">Booking an Event</h1>
                </div>
+                
             </div>
          </div>
          <div class="coffee_section_2">
@@ -175,6 +114,44 @@
   </a>
 </div>
            
+           
+             
+     <h1>Booking/Reservation</h1>
+
+    <h2>Hall Details</h2>
+    <!-- Display the selected Hall picture, description, and rental details -->
+
+    <h2>Event Details</h2>
+    <!-- Display the selected date range and audience details -->
+
+    <form action="confirm_booking.php" method="post">
+        <!-- Add any necessary form fields for confirming the details -->
+        <div class="callnow_bt"> <a> <input type="submit" name="update" value="Update Details"></a></div><br>
+        <input type="submit" name="proceed" value="Proceed"><br>
+        <input type="submit" name="cancel" value="Cancel">
+    </form>
+           </div>
+          <?php
+// Check if the form is submitted
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (isset($_POST['update'])) {
+        // Redirect to the update page for modifying the details
+        header('Location: update_booking.php');
+        exit();
+    } elseif (isset($_POST['proceed'])) {
+        // Process the booking and proceed to select catering or other services
+        // Add your booking logic here
+        
+        // Redirect to the service selection page
+        header('Location: select_services.php');
+        exit();
+    } elseif (isset($_POST['cancel'])) {
+        // Redirect back to the main page
+        header('Location: main_page.php');
+        exit();
+    }
+}
+?>
            <!-- HTML Form -->
 <form id="bookingForm">
   <button type="button" onclick="proceedBooking()">Proceed</button>
