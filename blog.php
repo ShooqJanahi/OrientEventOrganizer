@@ -56,6 +56,11 @@
                      <li class="nav-item">
                         <a class="nav-link" href="contact.php">Contact</a>
                      </li>
+                     <--<!-- Shooq added this -->
+<!-- Added Reservation Button -->
+                     <li class="nav-item">
+                        <a class="nav-link btn btn-primary text-white" href="confirm_reservation.php">Confirm Reservation</a>
+                     </li>
                   </ul>
                   <form class="form-inline my-2 my-lg-0">
                      <div class="login_bt">

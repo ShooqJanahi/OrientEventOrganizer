@@ -215,7 +215,7 @@ button {
 .header_section {
     width: 100%;
     float: left;
-    background-image: url(../images/banner-bg.png);
+    background-image: url(../images/banner-bg.jpg);
     height: auto;
     background-size: 100% 100%;
     background-repeat: no-repeat;
@@ -1077,4 +1077,8 @@ textarea#comment.update_mail::placeholder {
 
 .margin_top90 {
     margin-top: 90px;
+}
+.carousel-item img {
+  width: 70%;
+  height: auto;
 }

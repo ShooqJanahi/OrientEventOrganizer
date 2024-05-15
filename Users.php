@@ -11,13 +11,24 @@
     private $email;
     private $phoneNumber;
     
+    public function __construct() {
+        $this->userId = null;
+        $this->username = null;
+        $this->userType = null;
+        $this->firstName = null;
+        $this->lastName = null;
+        $this->password = null;
+        $this->email = null;
+        $this->phoneNumber = null;
+    }
+    
     public function getUserId() {
         return $this->userId;
     }
-    
+
     public function getUsername() {
         return $this->username;
-    }       
+    }
 
     public function getUserType() {
         return $this->userType;
@@ -46,8 +57,8 @@
     public function setUserId($userId): void {
         $this->userId = $userId;
     }
-    
-    public function setUserName($username): void {
+
+    public function setUsername($username): void {
         $this->username = $username;
     }
 
@@ -75,24 +86,10 @@
         $this->phoneNumber = $phoneNumber;
     }
 
-        
-    public function __construct() {
-        $this->userId = null;
-        $this->username = null;
-        $this->userType = null;
-        $this->firstName = null;
-        $this->lastName = null;
-        $this->password = null;
-        $this->email = null;
-        $this->phoneNumber = null;
-    }
-
-    // Getters and setters...
-
     public function deleteUser() {
         try {
             $db = Database::getInstance();
-            $data = $db->querySql("DELETE FROM dpProj_User WHERE userId='$this->userId'");
+            $data = $db->querySQL('DELETE FROM dpProj_User WHERE userId = '.$this->userId);
             return true;
         } catch (Exception $e) {
             echo 'Exception: ' . $e;
@@ -102,13 +99,13 @@
 
     public function initWithUid($userId) {
         $db = Database::getInstance();
-        $data = $db->singleFetch("SELECT * FROM dbProj_User WHERE userId='$userId'");
+        $data = $db->singleFetch('SELECT * FROM dbProj_User WHERE userId = '.$userId);
         $this->initWith($data->userId, $data->username, $data->userType, $data->firstName, $data->lastName, $data->password, $data->email, $data->phoneNumber);
     }
 
     public function checkUser($username, $password) {
         $db = Database::getInstance();
-        $data = $db->singleFetch("SELECT * FROM dpProj_User WHERE username = '$username' AND password = '$password'");
+        $data = $db->singleFetch('SELECT * FROM User WHERE username = \'' . $username . '\' AND password = \'' . $password . '\'');
         $this->initWith($data->userId, $data->username, $data->userType, $data->firstName, $data->lastName, $data->password, $data->email, $data->phoneNumber);
     }
 
@@ -126,7 +123,7 @@
         if ($this->isValid()) {
             try {
                 $db = Database::getInstance();
-                $data = $db->querySql("INSERT INTO dpProj_User (userType, firstName, lastName, password, email, phoneNumber) VALUES ('$this->userType', '$this->firstName', '$this->lastName', '$this->password', '$this->email', '$this->phoneNumber')");
+                $data = $db->querySQL('INSERT INTO dpProj_User (userId, username, userType, firstName, lastName, password, email, phoneNumber) VALUES (NULL, \'' .$this->username. '\',\'' .$this->userType. '\',\'' .$this->firstName. '\',\'' .$this->lastName. '\',\'' .$this->password. '\',\'' .$this->email. '\',\'' .$this->phoneNumber. '\')');
                 return true;
             } catch (Exception $e) {
                 echo 'Exception: ' . $e;
@@ -139,7 +136,7 @@
 
     private function initWith($userId, $username, $userType, $firstName, $lastName, $password, $email, $phoneNumber) {
         $this->userId = $userId;
-        $this->username = $data->username;
+        $this->username = $username;
         $this->userType = $userType;
         $this->firstName = $firstName;
         $this->lastName = $lastName;
@@ -151,18 +148,36 @@
     public function updateDB() {
         if ($this->isValid()) {
             $db = Database::getInstance();
-            $data = $db->querySql("UPDATE dpProj_User SET username='$this->username', firstName='$this->firstName', lastName='$this->lastName', password='$this->password', email='$this->email', phoneNumber='$this->phoneNumber' WHERE userId='$this->userId'");
+            $data = $db->querySQL("UPDATE dpProj_User SET username='$this->username', firstName='$this->firstName', lastName='$this->lastName', password='$this->password', email='$this->email', phoneNumber='$this->phoneNumber' WHERE userId='$this->userId'");
         }
     }
 
     public function getAllUsers() {
         $db = Database::getInstance();
-        $data = $db->multiFetch("SELECT * FROM dpProj_User");
+        $data = $db->multiFetch('SELECT * FROM dpProj_User');
         return $data;
     }
 
     public function isValid() {
-        return !empty($this->username) && !empty($this->userType) && !empty($this->firstName) && !empty($this->lastName) && !empty($this->password) && !empty($this->email) && !empty($this->phoneNumber);
+        $errors = true;
+
+        if (empty($this->username))
+            $errors = false;
+
+        if (empty($this->email))
+            $errors = false;
+        
+        if (empty($this->password))
+            $errors = false;
+
+        return $errors;
+    }
+    
+    function displayUname() {
+
+        if (!empty($_SESSION['userId'])) {
+            echo '<h5> ' . $_SESSION['username'] . ' : ' . $_SESSION['userType'] . ' </h5>';
+        }
     }
 }
 
