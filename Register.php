@@ -1,5 +1,37 @@
+<script>
+    //fucntion to validate the entered data in fields
+    function validate(obj) {
+        var errField = obj.id+'Err';
+        var valid = false;
+        
+        var value = obj.value.trim();
+        
+        if(value == '') {
+            document.getElementById(errField).innerHTML = obj.id+' field may not be blank';
+        } else {
+            if (obj.id === 'email') {
+            var emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailPattern.test(value)) {
+                document.getElementById(errField).innerHTML = 'Invalid email format';
+            } else {
+                document.getElementById(errField).innerHTML = '';
+                valid = true;
+            }                   
+        } else {
+            document.getElementById(errField).innerHTML = '';
+            valid = true;
+        }
+        
+    }
+    
+    return valid;
+    }
+</script>
+
+
 <?php
 include 'header.html';
+include 'Users.php';
 
 // Initialize variables for error messages
 $errors = [];
@@ -24,11 +56,9 @@ if (isset($_POST['submitted'])) {
         foreach ($errors as $msg)
             echo "$msg<br> ";
         echo '</div>';
-        echo 'if';
     } else {
         // If there are no errors 
         // Create user object and save user details
-        echo 'else';
         $user = new Users();
         $user->setUserName($_POST['username']);
         $user->setUserType("C");
@@ -37,9 +67,8 @@ if (isset($_POST['submitted'])) {
         $user->setEmail($_POST['email']);
         $user->setPhoneNumber($_POST['phone']);
         $user->setPassword($_POST['password']);
-        echo 'hh';
+        
         if ($user->initWithUsername()) {
-            echo 'user';
             if ($user->registerUser()) {
                 echo 'Registerd Successfully';
                 //header('Location: index.php');
@@ -56,20 +85,26 @@ if (isset($_POST['submitted'])) {
 <!-- Registration form start -->
 <h1>User Registration</h1>
 <div id="stylized" class="myform"> 
-    <form action="Register.php" method="post">
+    <form name="cForm" id="cForm" action="Register.php" method="post">
         <fieldset>
             <label><b>Username</b></label>
-            <input type="text" name="username" size="20" placeholder="Enter Username" value="<?php echo $_POST['username']; ?>"><br>
+            <input type="text" id="username" name="username" size="20" placeholder="Enter Username" autofocus onblur="validate(this);" value="<?php echo $_POST['username']; ?>">
+            <span id="usernameErr" style="color: red;"></span><br>
             <label><b>First Name</b></label>
-            <input type="text" name="fName" size="20" placeholder="Enter First Name" value="<?php echo $_POST['fName']; ?>"><br>
+            <input type="text" id="fName" name="fName" size="20" placeholder="Enter First Name" autofocus onblur="validate(this);" value="<?php echo $_POST['fName']; ?>">
+            <span id="fNameErr" style="color: red;"></span><br>
             <label><b>Last Name</b></label>
-            <input type="text" name="lName" size="20" placeholder="Enter Last Name" value="<?php echo $_POST['lName']; ?>"><br>
+            <input type="text" id="lName" name="lName" size="20" placeholder="Enter Last Name" autofocus onblur="validate(this);" value="<?php echo $_POST['lName']; ?>">
+            <span id="lNameErr" style="color: red;"></span><br>
             <label><b>Phone Number</b></label>
-            <input type="text" name="phone" size="20" placeholder="Enter Phone Number" value="<?php echo $_POST['phone']; ?>"><br>
+            <input type="text" id="phone" name="phone" size="20" placeholder="Enter Phone Number" autofocus onblur="validate(this);" value="<?php echo $_POST['phone']; ?>">
+            <span id="phoneErr" style="color: red;"></span><br>
             <label><b>Email</b></label>
-            <input type="email" name="email" size="50" placeholder="Enter Email" value="<?php echo $_POST['email']; ?>"><br>
+            <input type="email" id="email" name="email" size="50" placeholder="Enter Email" autofocus onblur="validate(this);" value="<?php echo $_POST['email']; ?>">
+            <span id="emailErr" style="color: red;"></span><br>
             <label><b>Password</b></label>
-            <input type="password" name="password" size="10" placeholder="Enter Password" value="<?php echo $_POST['password']; ?>">
+            <input type="password" id="password" name="password" size="10" placeholder="Enter Password" autofocus onblur="validate(this);" value="<?php echo $_POST['password']; ?>">
+            <span id="passwordErr" style="color: red;"></span><br>
             <div align="center">
                 <input type ="submit" value ="Register" />
             </div>  

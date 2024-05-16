@@ -1,6 +1,7 @@
 <?php
 //hello world
 //Testing - Hawraa
+include 'Users.php';
 class Login extends Users {
     public $ok;
     public $salt;
@@ -14,6 +15,7 @@ class Login extends Users {
 
         if (!$this->check_session())
             $this->check_cookie();
+        session_start();
 
         return $this->ok;
     }
@@ -37,16 +39,14 @@ class Login extends Users {
             return false;
     }
 
-    function check($uid) {
-        $this->initWithUid($uid);
-        if ($this->getUid() != null && $this->getUid() == $uid) {
+    function check($userId) {
+        $this->initWithUid($userId);
+        if ($this->getUserId() != null && $this->getUserId() == $userId) {
             $this->ok = true;
             $_SESSION['userId'] = $this->getUserId();
             $_SESSION['username'] = $this->getUsername();
-            $_SESSION['userType'] = $this->getUserType();
             setcookie('userId', $_SESSION['userId'], time() + 60 * 60 * 24 * 7, '/', $this->domain);
             setcookie('username', $_SESSION['username'], time() + 60 * 60 * 24 * 7, '/', $this->domain);
-            setcookie('userType', $_SESSION['userType'], time() + 60 * 60 * 24 * 7, '/', $this->domain);
 
             return true;
         }
@@ -62,15 +62,13 @@ class Login extends Users {
         try {
             
             $this->checkUser($username, $password);
-            if ($this->getUid() != null) {
+            if ($this->getUserId() != null) {
                 $this->ok = true;
 
                 $_SESSION['userId'] = $this->getUserId();
                 $_SESSION['username'] = $this->getUsername();
-                $_SESSION['userType'] = $this->getUserType();
                 setcookie('userId', $_SESSION['userId'], time() + 60 * 60 * 24 * 7, '/', $this->domain);
                 setcookie('username', $_SESSION['username'], time() + 60 * 60 * 24 * 7, '/', $this->domain);
-                setcookie('userType', $_SESSION['userType'], time() + 60 * 60 * 24 * 7, '/', $this->domain);
 
                 return true;
             } else {
@@ -89,10 +87,8 @@ class Login extends Users {
         $this->ok = false;
         $_SESSION['userId'] = '';
         $_SESSION['username'] = '';
-        $_SESSION['userType'] = '';
         setcookie('userId', '', time() - 3600, '/', $this->domain);
         setcookie('username', '', time() - 3600, '/', $this->domain);
-        setcookie('userType', '', time() - 3600, '/', $this->domain);
         session_destroy();
     }
 }

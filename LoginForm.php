@@ -1,13 +1,13 @@
 <?php
-include 'Login.php';
-include 'Database.php';
 // Check if the login form is submitted
+
 if (isset($_POST['submitted'])) {
+    include 'Login.php';
     $lgnObj = new Login(); // Create a new instance of the Login class
     // Get username and password from the form
     $username = trim($_POST['Username']);
     $password = trim($_POST['Password']);
-
+    
     // Attempt to login
     if (!empty($username) && !empty($password)) {
         if ($lgnObj->login($username, $password)) {
