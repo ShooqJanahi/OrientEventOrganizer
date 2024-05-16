@@ -9,12 +9,12 @@ require_once 'Database.php';
 require_once 'Search.php';
 
 // Start session to get client ID
-//session_start();
+// session_start();
 
 // Debugging: Check if session is working and client ID is set
-/*if (!isset($_SESSION['client_id'])) {
-    die('Client ID not set in session.');
-}*/
+// if (!isset($_SESSION['client_id'])) {
+//     die('Client ID not set in session.');
+// }
 
 // Check if the form is submitted via POST method
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
@@ -31,11 +31,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     print_r($_POST);
     echo '</pre>';
 
-    // Get the client ID from the session
-    $clientId = $_SESSION['client_id'];
+    // Hardcode the client ID for testing
+    $clientId = 1;
 
     // Validate input
-    if (empty($startDate) || empty($duration) || empty($endDate) || empty($audience) || empty($time) || empty($hallId) || empty($clientId)) {
+    if (empty($startDate) || empty($duration) || empty($endDate) || empty($audience) || empty($time) || empty($hallId)) {
         die("All fields are required.");
     }
 
@@ -48,24 +48,51 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         if (empty($availability)) {
             // Hall is available, proceed with booking
             $db = Database::getInstance();
-            $sql = "INSERT INTO dbProj_Reservation (reservationDate, startDate, endDate, timingID, totalCost, discountRate, clientId, hallId, eventId)
-                    VALUES (NOW(), ?, ?, ?, NULL, NULL, 1, ?, NULL)";
-            $stmt = $db->dblink->prepare($sql);
-            if (!$stmt) {
-                die("Prepare failed: (" . $db->dblink->errno . ") " . $db->dblink->error);
+            $dblink = $db->dblink;
+
+            // Start transaction
+            $dblink->begin_transaction();
+
+            // Insert new event
+            $eventSql = "INSERT INTO dbProj_event (eventType, numberOfAudiance, numberOFDays) VALUES ('Custom Event', ?, ?)";
+            $eventStmt = $dblink->prepare($eventSql);
+            if (!$eventStmt) {
+                throw new Exception("Event prepare failed: (" . $dblink->errno . ") " . $dblink->error);
             }
-            if (!$stmt->bind_param('ssiii', $startDate, $endDate, $time, $clientId, $hallId)) {
-                die("Binding parameters failed: (" . $stmt->errno . ") " . $stmt->error);
+            if (!$eventStmt->bind_param('ii', $audience, $duration)) {
+                throw new Exception("Event binding parameters failed: (" . $eventStmt->errno . ") " . $eventStmt->error);
             }
-            if (!$stmt->execute()) {
-                die("Execute failed: (" . $stmt->errno . ") " . $stmt->error);
+            if (!$eventStmt->execute()) {
+                throw new Exception("Event execute failed: (" . $eventStmt->errno . ") " . $eventStmt->error);
+            } 
+            $eventId = $eventStmt->insert_id;
+            $eventStmt->close();
+
+            // Insert new reservation
+            $reservationSql = "INSERT INTO dbProj_Reservation (reservationDate, startDate, endDate, timingID, totalCost, discountRate, clientId, hallId, eventId)
+                               VALUES (NOW(), ?, ?, ?, NULL, NULL, ?, ?, ?)";
+            $reservationStmt = $dblink->prepare($reservationSql);
+            if (!$reservationStmt) {
+                throw new Exception("Reservation prepare failed: (" . $dblink->errno . ") " . $dblink->error);
             }
-            $stmt->close();
+            if (!$reservationStmt->bind_param('sssiii', $startDate, $endDate, $time, $clientId, $hallId, $eventId)) {
+                throw new Exception("Reservation binding parameters failed: (" . $reservationStmt->errno . ") " . $reservationStmt->error);
+            }
+            if (!$reservationStmt->execute()) {
+                throw new Exception("Reservation execute failed: (" . $reservationStmt->errno . ") " . $reservationStmt->error);
+            }
+            $reservationStmt->close();
+
+            // Commit transaction
+            $dblink->commit();
+
             echo "Booking successful.";
         } else {
             echo "The hall is not available for the selected date and time.";
         }
     } catch (Exception $e) {
+        // Rollback transaction in case of error
+        $dblink->rollback();
         echo "Error: " . $e->getMessage();
     }
 } else {

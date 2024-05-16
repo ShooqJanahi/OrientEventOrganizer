@@ -52,31 +52,41 @@
     </div>
 
     <script>
-        document.getElementById('duration').addEventListener('change', function() {
+        function calculateEndDate() {
             const startDate = document.getElementById('start_date').value;
-            const duration = this.value;
-            if (startDate && duration) {
-                const endDate = new Date(startDate);
-                endDate.setDate(endDate.getDate() + parseInt(duration));
-                document.getElementById('end_date').value = endDate.toISOString().split('T')[0];
-            }
-        });
-
-        document.getElementById('start_date').addEventListener('change', function() {
             const duration = document.getElementById('duration').value;
-            const startDate = this.value;
             if (startDate && duration) {
-                const endDate = new Date(startDate);
-                endDate.setDate(endDate.getDate() + parseInt(duration));
-                document.getElementById('end_date').value = endDate.toISOString().split('T')[0];
+                fetch(window.location.href, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: new URLSearchParams({
+                        action: 'calculate_end_date',
+                        start_date: startDate,
+                        duration: duration
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        document.getElementById('end_date').value = data.end_date;
+                    } else {
+                        console.error('Error calculating end date');
+                    }
+                })
+                .catch(error => console.error('Error:', error));
             }
-        });
+        }
+
+        document.getElementById('duration').addEventListener('change', calculateEndDate);
+        document.getElementById('start_date').addEventListener('change', calculateEndDate);
 
         document.getElementById('proceedButton').addEventListener('click', function() {
             const form = document.getElementById('bookingForm');
             const formData = new FormData(form);
 
-            fetch('process_booking.php', {
+            fetch(window.location.href, {
                 method: 'POST',
                 body: formData
             })
@@ -91,3 +101,112 @@
     <?php include 'footer.html'; ?>
 </body>
 </html>
+
+<?php
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    // Check if it's an AJAX request for end date calculation
+    if (isset($_POST['action']) && $_POST['action'] == 'calculate_end_date') {
+        $startDate = $_POST['start_date'];
+        $duration = $_POST['duration'];
+
+        if ($startDate && $duration) {
+            $endDate = new DateTime($startDate);
+            $endDate->modify("+$duration days");
+            echo json_encode(['success' => true, 'end_date' => $endDate->format('Y-m-d')]);
+        } else {
+            echo json_encode(['success' => false]);
+        }
+        exit;
+    }
+
+    // Booking form submission handling
+    if (isset($_POST['proceed'])) {
+        // Enable error reporting for debugging
+        ini_set('display_errors', 1);
+        ini_set('display_startup_errors', 1);
+        error_reporting(E_ALL);
+
+        // Include necessary files
+        require_once 'Database.php';
+        require_once 'Search.php';
+
+        // Get the input values
+        $startDate = $_POST['start_date'];
+        $duration = $_POST['duration'];
+        $endDate = $_POST['end_date'];
+        $audience = $_POST['audience'];
+        $time = $_POST['time'];
+        $hallId = $_POST['hall'];
+
+        // Debugging: Print form data
+        echo '<pre>';
+        print_r($_POST);
+        echo '</pre>';
+
+        // Hardcode the client ID for testing
+        $clientId = 1;
+
+        // Validate input
+        if (empty($startDate) || empty($duration) || empty($endDate) || empty($audience) || empty($time) || empty($hallId)) {
+            die("All fields are required.");
+        }
+
+        // Create an instance of the Search class
+        $searchClass = new Search();
+
+        try {
+            // Check availability
+            $availability = $searchClass->searchHalls($startDate, $duration, $audience, $time, null);
+            if (empty($availability)) {
+                // Hall is available, proceed with booking
+                $db = Database::getInstance();
+                $dblink = $db->dblink;
+
+                // Start transaction
+                $dblink->begin_transaction();
+
+                // Insert new event
+                $eventSql = "INSERT INTO dbProj_event (eventType, numberOfAudiance, numberOFDays) VALUES ('Custom Event', ?, ?)";
+                $eventStmt = $dblink->prepare($eventSql);
+                if (!$eventStmt) {
+                    throw new Exception("Event prepare failed: (" . $dblink->errno . ") " . $dblink->error);
+                }
+                if (!$eventStmt->bind_param('ii', $audience, $duration)) {
+                    throw new Exception("Event binding parameters failed: (" . $eventStmt->errno . ") " . $eventStmt->error);
+                }
+                if (!$eventStmt->execute()) {
+                    throw new Exception("Event execute failed: (" . $eventStmt->errno . ") " . $eventStmt->error);
+                }
+                $eventId = $eventStmt->insert_id;
+                $eventStmt->close();
+
+                // Insert new reservation
+                $reservationSql = "INSERT INTO dbProj_Reservation (reservationDate, startDate, endDate, timingID, totalCost, discountRate, clientId, hallId, eventId)
+                                   VALUES (NOW(), ?, ?, ?, NULL, NULL, ?, ?, ?)";
+                $reservationStmt = $dblink->prepare($reservationSql);
+                if (!$reservationStmt) {
+                    throw new Exception("Reservation prepare failed: (" . $dblink->errno . ") " . $dblink->error);
+                }
+                if (!$reservationStmt->bind_param('sssiii', $startDate, $endDate, $time, $clientId, $hallId, $eventId)) {
+                    throw new Exception("Reservation binding parameters failed: (" . $reservationStmt->errno . ") " . $reservationStmt->error);
+                }
+                if (!$reservationStmt->execute()) {
+                    throw new Exception("Reservation execute failed: (" . $reservationStmt->errno . ") " . $reservationStmt->error);
+                }
+                $reservationStmt->close();
+
+                // Commit transaction
+                $dblink->commit();
+
+                echo "Booking successful.";
+            } else {
+                echo "The hall is not available for the selected date and time.";
+            }
+        } catch (Exception $e) {
+            // Rollback transaction in case of error
+            $dblink->rollback();
+            echo "Error: " . $e->getMessage();
+        }
+    }
+}
+?>
