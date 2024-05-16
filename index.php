@@ -1,5 +1,6 @@
 <?php
-include 'banner.html';
+///include 'banner.html';
+include 'header_admin.html';
 ?>
 <!DOCTYPE html>
 <html>
