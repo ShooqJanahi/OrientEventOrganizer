@@ -1,13 +1,12 @@
 <?php
 
 class Database {
-
     public static $instance = null;
     public $dblink = null;
 
     public static function getInstance() {
         if (is_null(self::$instance)) {
-            self::$instance = new Database ( );
+            self::$instance = new Database();
         }
         return self::$instance;
     }
@@ -19,7 +18,7 @@ class Database {
     }
 
     function connect() {
-        $this->dblink = mysqli_connect('localhost', 'u202001753', 'u202001753', 'db202001753') or die('CAN NOT CONNECT');
+        $this->dblink = mysqli_connect('localhost', 'u202101977', 'u202101977', 'db202101977') or die('CAN NOT CONNECT');
     }
 
     function __destruct() {
