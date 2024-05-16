@@ -19,7 +19,7 @@ class Database {
     }
 
     function connect() {
-        $this->dblink = mysqli_connect('localhost', 'u202203500', 'u202203500', 'db202203500') or die('CAN NOT CONNECT');
+        $this->dblink = mysqli_connect('localhost', 'u202001753', 'u202001753', 'db202001753') or die('CAN NOT CONNECT');
     }
 
     function __destruct() {
