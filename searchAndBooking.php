@@ -1,95 +1,196 @@
+<?php
+// Include the Database class
+include 'Database.php';
+$db = Database::getInstance();
+
+// Get search criteria from query string
+$numberOfAudience = isset($_GET['numberOfAudience']) ? $_GET['numberOfAudience'] : '';
+$selectDate = isset($_GET['selectDate']) ? $_GET['selectDate'] : '';
+$duration = isset($_GET['duration']) ? $_GET['duration'] : '';
+$time = isset($_GET['time']) ? $_GET['time'] : '';
+$searchTerm = isset($_GET['searchTerm']) ? $_GET['searchTerm'] : '';
+
+// Convert 12-hour format time to 24-hour format
+function convertTo24HourFormat($time) {
+    return date("H:i:s", strtotime($time));
+}
+
+// Convert the input time to 24-hour format for comparison
+$time24 = !empty($time) ? convertTo24HourFormat($time) : '';
+
+$sql = "SELECT h.hallId, h.hallName, h.location, h.capacity, h.description, h.image, h.rentalCharge, t.timingSlotStart, t.timingSlotEnd
+        FROM dbProj_Hall h
+        JOIN dpProj_HallsTimingSlots t ON h.hallId = t.hallId
+        WHERE 1=1";
+
+if (!empty($numberOfAudience)) {
+    $sql .= " AND h.capacity >= $numberOfAudience";
+}
+if (!empty($searchTerm)) {
+    $sql .= " AND (h.hallName LIKE '%$searchTerm%' OR h.description LIKE '%$searchTerm%')";
+}
+if (!empty($selectDate) && !empty($duration)) {
+    $sql .= " AND NOT EXISTS (
+              SELECT 1
+              FROM dbProj_Reservation r
+              WHERE r.hallId = h.hallId
+                AND r.timingID = t.timingID
+                AND r.startDate <= DATE_ADD('$selectDate', INTERVAL $duration DAY)
+                AND r.endDate >= '$selectDate'
+          )";
+}
+if (!empty($time24)) {
+    $sql .= " AND '$time24' BETWEEN t.timingSlotStart AND t.timingSlotEnd";
+}
+
+$halls = $db->multiFetch($sql);
+
+// Convert time to 12-hour format
+function convertTo12HourFormat($time) {
+    return date("g:i A", strtotime($time));
+}
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Events</title>
+    <title>Search for Halls</title>
     <style>
-        body { font-family: Arial, sans-serif; }
+        body { font-family: Arial, sans-serif; color: black; }
         .form-section { margin-bottom: 20px; }
-        label { margin-right: 10px; }
-        input, select { margin-right: 20px; }
-        .result { margin-top: 20px; border-top: 1px solid #ccc; padding-top: 20px; }
-        table { width: 100%; border-collapse: collapse; }
-        th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
-        .book-btn { padding: 5px 10px; background-color: #007BFF; color: white; text-decoration: none; border-radius: 5px; }
+        label { margin-right: 10px; color: black; }
+        input, select { margin-right: 20px; color: black; }
+        .form-buttons { margin-top: 20px; }
+        .form-buttons input {
+            padding: 10px 20px;
+            margin-right: 10px;
+            background-color: black;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            text-transform: uppercase;
+            cursor: pointer;
+        }
+        .form-buttons input:hover {
+            background-color: red;
+            color: white;
+        }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        table, th, td { border: 1px solid #ddd; }
+        th, td { padding: 10px; text-align: left; color: black; }
+        th { background-color: #f8f8f8; text-align: center; }
+        td img { max-width: 100px; height: auto; display: block; margin: 0 auto; }
+        .select-button {
+            display: inline-block;
+            padding: 8px 16px;
+            font-size: 14px;
+            color: white;
+            background-color: black;
+            border: none;
+            border-radius: 5px;
+            text-align: center;
+            text-decoration: none;
+        }
+        .select-button:hover {
+            background-color: red;
+            color: white;
+        }
+        .hidden-column {
+            display: none;
+        }
     </style>
+    <script>
+        function toggleRentalDetails() {
+            var rentalDetailsCells = document.getElementsByClassName('rental-details-cell');
+            var rentalDetailsHeader = document.getElementById('rental-details-header');
+
+            rentalDetailsHeader.classList.remove('hidden-column');
+            for (var i = 0; i < rentalDetailsCells.length; i++) {
+                rentalDetailsCells[i].classList.remove('hidden-column');
+            }
+        }
+
+        window.onload = function() {
+            var searchForm = document.getElementById('searchForm');
+            searchForm.addEventListener('submit', function() {
+                toggleRentalDetails();
+            });
+        }
+    </script>
 </head>
 <body>
     <?php include 'header.html'; ?>
 
-    <div class="coffee_section layout_padding">
+    <div class="search_section layout_padding">
         <div class="container">
             <h1>Search for Halls</h1>
-            <form method="post" action="">
+            <form id="searchForm" method="get" action="searchAndBooking.php">
                 <div class="form-section">
-                    <label for="date">Select Date:</label>
-                    <input type="date" id="date" name="date" value="<?php echo isset($_POST['date']) ? htmlspecialchars($_POST['date']) : ''; ?>">
-                    <label for="duration">Duration:</label>
+                    <label for="numberOfAudience">Number of Audience:</label>
+                    <input type="number" id="numberOfAudience" name="numberOfAudience" value="<?php echo htmlspecialchars($numberOfAudience); ?>">
+                    <label for="selectDate">Select Date:</label>
+                    <input type="date" id="selectDate" name="selectDate" value="<?php echo htmlspecialchars($selectDate); ?>">
                     <select id="duration" name="duration">
                         <option value="">Select Duration</option>
-                        <option value="1" <?php echo (isset($_POST['duration']) && $_POST['duration'] == '1') ? 'selected' : ''; ?>>1 Day</option>
-                        <option value="7" <?php echo (isset($_POST['duration']) && $_POST['duration'] == '7') ? 'selected' : ''; ?>>1 Week</option>
-                        <option value="15" <?php echo (isset($_POST['duration']) && $_POST['duration'] == '15') ? 'selected' : ''; ?>>15 Days</option>
+                        <option value="1" <?php echo ($duration == '1') ? 'selected' : ''; ?>>1 Day</option>
+                        <option value="7" <?php echo ($duration == '7') ? 'selected' : ''; ?>>1 Week</option>
+                        <option value="15" <?php echo ($duration == '15') ? 'selected' : ''; ?>>15 Days</option>
                     </select>
                     <label for="time">Time:</label>
-                    <input type="time" id="time" name="time" value="<?php echo isset($_POST['time']) ? htmlspecialchars($_POST['time']) : ''; ?>">
+                    <input type="time" id="time" name="time" value="<?php echo htmlspecialchars($time); ?>">
                 </div>
                 <div class="form-section">
-                    <label for="audience">Number of Audience:</label>
-                    <input type="number" id="audience" name="audience" placeholder="e.g., 100" value="<?php echo isset($_POST['audience']) ? htmlspecialchars($_POST['audience']) : ''; ?>">
-                    <label for="search">Search by Name/Description:</label>
-                    <input type="text" id="search" name="search" placeholder="Enter hall name or description" value="<?php echo isset($_POST['search']) ? htmlspecialchars($_POST['search']) : ''; ?>">
+                    <label for="searchTerm">Search by Name/Description:</label>
+                    <input type="text" id="searchTerm" name="searchTerm" value="<?php echo htmlspecialchars($searchTerm); ?>">
                 </div>
-                <input type="submit" name="submitted" value="Search">
+                <div class="form-buttons">
+                    <input type="submit" value="Search">
+                </div>
             </form>
-            <div class="result">
-                <?php
-                if (isset($_POST['submitted'])) {
-                    // Get input values from the form using POST
-                    $date = isset($_POST['date']) ? $_POST['date'] : null;
-                    $duration = isset($_POST['duration']) ? $_POST['duration'] : null;
-                    $audience = isset($_POST['audience']) ? $_POST['audience'] : null;
-                    $time = isset($_POST['time']) ? $_POST['time'] : null;
-                    $search = isset($_POST['search']) ? $_POST['search'] : null;
 
-                    // Include the Search class
-                    require_once 'Search.php';
-
-                    // Instantiate the Search class
-                    $searchClass = new Search();
-
-                    try {
-                        // Perform the search
-                        $halls = $searchClass->searchHalls($date, $duration, $audience, $time, $search);
-
-                        // Display results
-                        if (!empty($halls)) {
-                            echo "<table><tr><th>Hall Name</th><th>Location</th><th>Capacity</th><th>Description</th><th>Available Time</th><th>Action</th></tr>";
-                            foreach ($halls as $hall) {
-                                echo "<tr><td>".$hall["hallName"]."</td><td>".$hall["location"]."</td><td>".$hall["capacity"]."</td><td>".$hall["description"]."</td><td>".$hall["timingSlotStart"]." - ".$hall["timingSlotEnd"]."</td><td><a class='book-btn' href='booking_form.php?hallId=".$hall["hallId"]."&date=".$date."&duration=".$duration."&audience=".$audience."&time=".$time."'>Book</a></td></tr>";
-                            }
-                            echo "</table>";
-                        } else {
-                            echo "No results found.<br>";
-                            // Get recommendations
-                            $recommendations = $searchClass->recommendSlots($date, $duration, $audience, $search);
-                            if (!empty($recommendations)) {
-                                echo "However, here are some alternative available slots:<br>";
-                                echo "<table><tr><th>Hall Name</th><th>Location</th><th>Capacity</th><th>Description</th><th>Available Time</th><th>Action</th></tr>";
-                                foreach ($recommendations as $rec) {
-                                    echo "<tr><td>".$rec["hallName"]."</td><td>".$rec["location"]."</td><td>".$rec["capacity"]."</td><td>".$rec["description"]."</td><td>".$rec["timingSlotStart"]." - ".$rec["timingSlotEnd"]."</td><td><a class='book-btn' href='booking_form.php?hallId=".$rec["hallId"]."&date=".$date."&duration=".$duration."&audience=".$audience."&time=".$time."'>Book</a></td></tr>";
-                                }
-                                echo "</table>";
-                            } else {
-                                echo "No alternative slots available.";
-                            }
-                        }
-                    } catch (Exception $e) {
-                        echo "Error: " . $e->getMessage();
-                    }
-                }
-                ?>
-            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Hall Name</th>
+                        <th>Location</th>
+                        <th>Capacity</th>
+                        <th>Description</th>
+                        <th>Picture</th>
+                        <th>Available Time</th>
+                        <th id="rental-details-header" class="<?php echo empty($duration) ? 'hidden-column' : ''; ?>">Rental Details</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php if ($halls): ?>
+                        <?php foreach ($halls as $hall): ?>
+                            <?php
+                            $timingSlotStart = new DateTime($hall->timingSlotStart);
+                            $timingSlotEnd = new DateTime($hall->timingSlotEnd);
+                            $interval = $timingSlotStart->diff($timingSlotEnd);
+                            $hours = $interval->h + ($interval->days * 24);
+                            $rentalDetails = $hours * $hall->rentalCharge;
+                            $totalRentalDetails = $rentalDetails * $duration;
+                            ?>
+                            <tr>
+                                <td><?php echo htmlspecialchars($hall->hallName); ?></td>
+                                <td><?php echo htmlspecialchars($hall->location); ?></td>
+                                <td><?php echo htmlspecialchars($hall->capacity); ?></td>
+                                <td><?php echo htmlspecialchars($hall->description); ?></td>
+                                <td><img src="<?php echo htmlspecialchars($hall->image); ?>" alt="<?php echo htmlspecialchars($hall->hallName); ?>"></td>
+                                <td><?php echo convertTo12HourFormat($hall->timingSlotStart); ?> - <?php echo convertTo12HourFormat($hall->timingSlotEnd); ?></td>
+                                <td class="rental-details-cell <?php echo empty($duration) ? 'hidden-column' : ''; ?>"><?php echo htmlspecialchars($totalRentalDetails); ?></td>
+                                <td><a class="select-button" href="booking_form.php?hallId=<?php echo $hall->hallId; ?>&date=<?php echo $selectDate; ?>&duration=<?php echo $duration; ?>&audience=<?php echo $numberOfAudience; ?>&time=<?php echo convertTo12HourFormat($hall->timingSlotStart) . ' - ' . convertTo12HourFormat($hall->timingSlotEnd); ?>&rentalDetails=<?php echo $totalRentalDetails; ?>&availableTime=<?php echo convertTo12HourFormat($hall->timingSlotStart) . ' - ' . convertTo12HourFormat($hall->timingSlotEnd); ?>">Select</a></td>
+                            </tr>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <tr>
+                            <td colspan="8">No halls available for the selected criteria.</td>
+                        </tr>
+                    <?php endif; ?>
+                </tbody>
+            </table>
         </div>
     </div>
 
