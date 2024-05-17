@@ -1,6 +1,5 @@
-
 <?php
-require_once 'User.php';
+require_once 'Users.php';
 
 class Employee extends Users {
     private $employeeId;
@@ -8,7 +7,6 @@ class Employee extends Users {
     private $position;
     private $joinDate;
 
-    
     public function __construct() {
         parent::__construct();
         $this->employeeId = null;
@@ -49,9 +47,8 @@ class Employee extends Users {
     public function setJoinDate($joinDate) {
         $this->joinDate = $joinDate;
     }
-    
-    
-    
+
+    // Database methods
     public function deleteEmployee() {
         try {
             $db = Database::getInstance();
@@ -66,7 +63,12 @@ class Employee extends Users {
     public function initWithEmployeeId($employeeId) {
         $db = Database::getInstance();
         $data = $db->singleFetch("SELECT * FROM dbProj_Employee WHERE employeeId='$employeeId'");
-        $this->initWith($data->userId, $data->department, $data->position, $data->joinDate);
+        if ($data) {
+            $this->initWith($data->userId, $data->department, $data->position, $data->joinDate);
+            return true;
+        } else {
+            return false;
+        }
     }
 
     public function registerEmployee() {

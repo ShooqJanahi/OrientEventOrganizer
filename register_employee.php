@@ -3,20 +3,20 @@ include 'debugging.php';
 
 if (isset($_POST['submitted'])) {
     // First, create the User
-    $user = new Users();
-    $user->setEmail($_POST['Email']);
-    $user->setUsername($_POST['Username']);
-    $user->setPassword($_POST['Password']);
-    $user->setFirstName($_POST['FName']);
-    $user->setLastName($_POST['LName']);
-    $user->setPhoneNumber($_POST['PhoneNumber']);
-    $user->setUserType('employee'); // Ensure userType is set appropriately
+    $menu = new Users();
+    $menu->setEmail($_POST['Email']);
+    $menu->setUsername($_POST['Username']);
+    $menu->setPassword($_POST['Password']);
+    $menu->setFirstName($_POST['FName']);
+    $menu->setLastName($_POST['LName']);
+    $menu->setPhoneNumber($_POST['PhoneNumber']);
+    $menu->setUserType('employee'); // Ensure userType is set appropriately
 
-    if (!$user->initWithUsername()) {
-        if ($user->registerUser()) {
+    if (!$menu->initWithUsername()) {
+        if ($menu->registerUser()) {
             // Now, create the Employee using the newly created userId
             $employee = new Employee();
-            $employee->setUserId($user->getUserId());
+            $employee->setUserId($menu->getUserId());
             $employee->setDepartment($_POST['Department']);
             $employee->setPosition($_POST['Position']);
             $employee->setJoinDate($_POST['JoinDate']);

@@ -91,6 +91,7 @@ class Users {
             try {
                 $db = Database::getInstance();
                 $data = $db->querySql("INSERT INTO dpProj_User (userType, firstName, lastName, username, password, email, phoneNumber) VALUES ('$this->userType', '$this->firstName', '$this->lastName', '$this->username', '$this->password', '$this->email', '$this->phoneNumber')");
+                $this->userId = $db->getLastInsertId();
                 return true;
             } catch (Exception $e) {
                 echo 'Exception: ' . $e;

@@ -18,12 +18,17 @@ class Database {
     }
 
     function connect() {
-        $this->dblink = mysqli_connect('localhost', 'u202101977', 'u202101977', 'db202101977') or die('CAN NOT CONNECT');
+        $this->dblink = mysqli_connect('localhost', 'u202101977', 'u202101977', 'db202101977');
+        if (!$this->dblink) {
+            die('CAN NOT CONNECT: ' . mysqli_connect_error());
+        } else {
+            echo 'Connected successfully to the database.<br>'; // Debugging line
+        }
     }
 
     function __destruct() {
         if (!is_null($this->dblink)) {
-            $this->close($this->dblink);
+            $this->close();
         }
     }
 
@@ -32,59 +37,58 @@ class Database {
     }
 
     function querySQL($sql) {
-        if ($sql != null || $sql != '') {
-            $sql = $this->mkSafe($sql);
-            mysqli_query($this->dblink, $sql);
+        if ($sql != null && $sql != '') {
+            $result = mysqli_query($this->dblink, $sql);
+            if (!$result) {
+                die('Query error: ' . mysqli_error($this->dblink)); // Debugging line
+            }
+            return $result;
         }
+        return null;
     }
 
     function singleFetch($sql) {
-        $sql = $this->mkSafe($sql);
         $fet = null;
-        if ($sql != null || $sql != '') {
+        if ($sql != null && $sql != '') {
             $res = mysqli_query($this->dblink, $sql);
+            if (!$res) {
+                die('Error in query: ' . mysqli_error($this->dblink)); // Debugging line
+            }
             $fet = mysqli_fetch_object($res);
         }
         return $fet;
     }
 
     function multiFetch($sql) {
-        $sql = $this->mkSafe($sql);
-        $result = null;
-        $counter = 0;
-        if ($sql != null || $sql != '') {
+        $result = [];
+        if ($sql != null && $sql != '') {
             $res = mysqli_query($this->dblink, $sql);
-            while ($fet = mysqli_fetch_object($res)) {
-                $result[$counter] = $fet;
-                $counter++;
+            if (!$res) {
+                die('Error in query: ' . mysqli_error($this->dblink)); // Debugging line
             }
+            while ($fet = mysqli_fetch_object($res)) {
+                $result[] = $fet;
+            }
+            echo 'Fetched ' . count($result) . ' rows.<br>'; // Debugging line
         }
         return $result;
     }
 
     function mkSafe($string) {
-        /* $string = strip_tags($string);
-          if (!get_magic_quotes_gpc()) {
-          $string = addslashes($string);
-          } else {
-          $string = stripslashes($string);
-          }
-          $string = str_ireplace("script", "blocked", $string);
-          $string = addcslashes($escaped, '%_');
-
-          $string = trim($string);*/
-          //$newString = mysqli_escape_string($this->dblink, $string); 
-
-        return $string;
+        return mysqli_real_escape_string($this->dblink, $string);
     }
 
     function getRows($sql) {
         $rows = 0;
-        if ($sql != null || $sql != '') {
+        if ($sql != null && $sql != '') {
             $result = mysqli_query($this->dblink, $sql);
             $rows = mysqli_num_rows($result);
         }
         return $rows;
     }
 
+    function prepare($query) {
+        return mysqli_prepare($this->dblink, $query);
+    }
 }
+?>
