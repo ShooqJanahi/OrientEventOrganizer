@@ -1,5 +1,4 @@
 <?php
-require_once 'Database.php';
 
 class Users {
     private $userId;
@@ -23,6 +22,7 @@ class Users {
     }
 
     // Getters and Setters
+
     public function getUserId() {
         return $this->userId;
     }
@@ -105,33 +105,23 @@ class Users {
                 $stmt = $db->querySQL($sql, $params);
                 if ($stmt) {
                     $this->userId = $db->getLastInsertId();
+                    error_log("User registered successfully. UserID: " . $this->userId);
                     return true;
                 } else {
-                    echo 'Error: Unable to execute query.';
+                    error_log("Error registering user: " . $db->error);
                     return false;
                 }
             } catch (Exception $e) {
-                echo 'Exception: ' . $e->getMessage();
+                error_log("Exception registering user: " . $e->getMessage());
                 return false;
             }
         } else {
+            error_log("Invalid data for registering user");
             return false;
         }
     }
 
-    public function initWithUsername() {
-        $db = Database::getInstance();
-        $sql = "SELECT * FROM dbProj_User WHERE username = ?";
-        $params = [$this->username];
-        $data = $db->singleFetch($sql, $params);
-        if ($data) {
-            $this->initWith($data->userId, $data->userType, $data->firstName, $data->lastName, $data->username, $data->password, $data->email, $data->phoneNumber);
-            return true;
-        } else {
-            return false;
-        }
-    }
-   public function initWithUserId($userId) {
+    public function initWithUserId($userId) {
         $db = Database::getInstance();
         $sql = "SELECT * FROM dbProj_User WHERE userId = ?";
         $params = [$userId];
@@ -146,22 +136,13 @@ class Users {
             $this->email = $userData->email;
             $this->phoneNumber = $userData->phoneNumber;
             return true;
+        } else {
+            error_log("User data not found for userId: " . $userId);
         }
         return false;
     }
-    
-    private function initWith($userId, $userType, $firstName, $lastName, $username, $password, $email, $phoneNumber) {
-        $this->userId = $userId;
-        $this->userType = $userType;
-        $this->firstName = $firstName;
-        $this->lastName = $lastName;
-        $this->username = $username;
-        $this->password = $password;
-        $this->email = $email;
-        $this->phoneNumber = $phoneNumber;
-    }
 
-    public function updateDB() {
+    public function updateUserDB() {
         if ($this->isValid()) {
             $db = Database::getInstance();
             $sql = "UPDATE dbProj_User SET firstName = ?, lastName = ?, username = ?, email = ?, phoneNumber = ? WHERE userId = ?";
@@ -173,38 +154,13 @@ class Users {
                 $this->phoneNumber,
                 $this->userId
             ];
-            $result = $db->querySQL($sql, $params);
-            if (!$result) {
-                error_log("Error updating user: " . $db->error);
-            }
-            return $result;
+            return $db->querySQL($sql, $params);
         }
-        error_log("Invalid data for updating user");
         return false;
     }
 
-    public function deleteUser() {
-        try {
-            $db = Database::getInstance();
-            $sql = "DELETE FROM dbProj_User WHERE userId = ?";
-            $params = [$this->userId];
-            $db->querySQL($sql, $params);
-            return true;
-        } catch (Exception $e) {
-            echo 'Exception: ' . $e->getMessage();
-            return false;
-        }
-    }
-
-    public function getAllUsers() {
-        $db = Database::getInstance();
-        $sql = "SELECT * FROM dbProj_User";
-        $data = $db->multiFetch($sql);
-        return $data;
-    }
-
     public function isValid() {
-        return !empty($this->userType) && !empty($this->firstName) && !empty($this->lastName) && !empty($this->username) && !empty($this->password) && !empty($this->email) && !empty($this->phoneNumber);
+        return !empty($this->firstName) && !empty($this->lastName) && !empty($this->username) && !empty($this->email) && !empty($this->phoneNumber);
     }
 }
 ?>
