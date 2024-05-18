@@ -104,25 +104,38 @@ include 'Database.php';
 
     public function checkUser($username, $password) {
         $db = Database::getInstance();
-        $data = $db->singleFetch('SELECT * FROM dbProj_User WHERE username = \'' . $username . '\' AND password = \'' . $password . '\'');
+        $stmt = $db->prepare('SELECT * FROM dbProj_User WHERE username = ? AND password = AES_ENCRYPT(?, "p0ly")');
+        $stmt->bind_param('ss', $username, $password);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $data = $result->fetch_object();
+        $decrypted_password = $db->singleFetch('SELECT AES_DECRYPT(password, "p0ly") as password FROM dbProj_User WHERE userId = ' . $data->userId)->password;
+        $data->password = $decrypted_password;
         $this->initWith($data->userId, $data->username, $data->userType, $data->firstName, $data->lastName, $data->password, $data->email, $data->phoneNumber);
     }
 
     function initWithUsername() {
 
         $db = Database::getInstance();
-        $data = $db->singleFetch('SELECT * FROM dbProj_User WHERE username = \'' . $this->username . '\'');
-        if ($data != null) {
+        $stmt = $db->prepare('SELECT * FROM dbProj_User WHERE username = ?');
+        $stmt->bind_param('s', $this->username);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        if ($result->num_rows > 0) {
             return false;
         }
         return true;
     }
-    
+    //'INSERT INTO dbProj_User  (username, userType, firstName, lastName, password, email, phoneNumber)
+    // VALUES ( \'' .$this->username. '\',\'' .$this->userType. '\',\'' .$this->firstName. '\',\'' .$this->lastName. '\',\'' .$this->password. '\',\'' .$this->email. '\',\'' .$this->phoneNumber. '\')'
     public function registerUser() {
          if ($this->isValid()) {
             try {
                 $db = Database::getInstance();
-                $data = $db->querySQL('INSERT INTO dbProj_User  (username, userType, firstName, lastName, password, email, phoneNumber) VALUES ( \'' .$this->username. '\',\'' .$this->userType. '\',\'' .$this->firstName. '\',\'' .$this->lastName. '\',\'' .$this->password. '\',\'' .$this->email. '\',\'' .$this->phoneNumber. '\')');
+                $stmt = $db->prepare("INSERT INTO dbProj_User (username, userType, firstName, lastName, password, email, phoneNumber) 
+                        VALUES (?, ?, ?, ?, AES_ENCRYPT(?, 'p0ly'), ?, ?)");
+                $stmt->bind_param("sssssss", $this->username, $this->userType, $this->firstName, $this->lastName, $this->password, $this->email, $this->phoneNumber);
+                $stmt->execute();
                 return true;
             } catch (Exception $e) {
                 echo 'Exception: ' . $e;
