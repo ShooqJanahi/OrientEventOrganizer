@@ -1,4 +1,6 @@
 <?php
+require_once 'Database.php';
+
 class Users {
     private $userId;
     private $firstName;
@@ -90,11 +92,26 @@ class Users {
         if ($this->isValid()) {
             try {
                 $db = Database::getInstance();
-                $data = $db->querySql("INSERT INTO dpProj_User (userType, firstName, lastName, username, password, email, phoneNumber) VALUES ('$this->userType', '$this->firstName', '$this->lastName', '$this->username', '$this->password', '$this->email', '$this->phoneNumber')");
-                $this->userId = $db->getLastInsertId();
-                return true;
+                $sql = "INSERT INTO dbProj_User (userType, firstName, lastName, username, password, email, phoneNumber) VALUES (?, ?, ?, ?, ?, ?, ?)";
+                $params = [
+                    $this->userType,
+                    $this->firstName,
+                    $this->lastName,
+                    $this->username,
+                    $this->password,
+                    $this->email,
+                    $this->phoneNumber
+                ];
+                $stmt = $db->querySQL($sql, $params);
+                if ($stmt) {
+                    $this->userId = $db->getLastInsertId();
+                    return true;
+                } else {
+                    echo 'Error: Unable to execute query.';
+                    return false;
+                }
             } catch (Exception $e) {
-                echo 'Exception: ' . $e;
+                echo 'Exception: ' . $e->getMessage();
                 return false;
             }
         } else {
@@ -104,7 +121,9 @@ class Users {
 
     public function initWithUsername() {
         $db = Database::getInstance();
-        $data = $db->singleFetch("SELECT * FROM dpProj_User WHERE username = '$this->username'");
+        $sql = "SELECT * FROM dbProj_User WHERE username = ?";
+        $params = [$this->username];
+        $data = $db->singleFetch($sql, $params);
         if ($data) {
             $this->initWith($data->userId, $data->userType, $data->firstName, $data->lastName, $data->username, $data->password, $data->email, $data->phoneNumber);
             return true;
@@ -112,7 +131,25 @@ class Users {
             return false;
         }
     }
-
+   public function initWithUserId($userId) {
+        $db = Database::getInstance();
+        $sql = "SELECT * FROM dbProj_User WHERE userId = ?";
+        $params = [$userId];
+        $userData = $db->singleFetch($sql, $params);
+        if ($userData) {
+            $this->userId = $userData->userId;
+            $this->firstName = $userData->firstName;
+            $this->lastName = $userData->lastName;
+            $this->username = $userData->username;
+            $this->userType = $userData->userType;
+            $this->password = $userData->password;
+            $this->email = $userData->email;
+            $this->phoneNumber = $userData->phoneNumber;
+            return true;
+        }
+        return false;
+    }
+    
     private function initWith($userId, $userType, $firstName, $lastName, $username, $password, $email, $phoneNumber) {
         $this->userId = $userId;
         $this->userType = $userType;
@@ -127,24 +164,42 @@ class Users {
     public function updateDB() {
         if ($this->isValid()) {
             $db = Database::getInstance();
-            $data = $db->querySql("UPDATE dpProj_User SET userType='$this->userType', firstName='$this->firstName', lastName='$this->lastName', username='$this->username', password='$this->password', email='$this->email', phoneNumber='$this->phoneNumber' WHERE userId='$this->userId'");
+            $sql = "UPDATE dbProj_User SET firstName = ?, lastName = ?, username = ?, email = ?, phoneNumber = ? WHERE userId = ?";
+            $params = [
+                $this->firstName,
+                $this->lastName,
+                $this->username,
+                $this->email,
+                $this->phoneNumber,
+                $this->userId
+            ];
+            $result = $db->querySQL($sql, $params);
+            if (!$result) {
+                error_log("Error updating user: " . $db->error);
+            }
+            return $result;
         }
+        error_log("Invalid data for updating user");
+        return false;
     }
 
     public function deleteUser() {
         try {
             $db = Database::getInstance();
-            $data = $db->querySql("DELETE FROM dpProj_User WHERE userId='$this->userId'");
+            $sql = "DELETE FROM dbProj_User WHERE userId = ?";
+            $params = [$this->userId];
+            $db->querySQL($sql, $params);
             return true;
         } catch (Exception $e) {
-            echo 'Exception: ' . $e;
+            echo 'Exception: ' . $e->getMessage();
             return false;
         }
     }
 
     public function getAllUsers() {
         $db = Database::getInstance();
-        $data = $db->multiFetch("SELECT * FROM dpProj_User");
+        $sql = "SELECT * FROM dbProj_User";
+        $data = $db->multiFetch($sql);
         return $data;
     }
 

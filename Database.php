@@ -1,5 +1,4 @@
 <?php
-
 class Database {
     public static $instance = null;
     public $dblink = null;
@@ -18,9 +17,9 @@ class Database {
     }
 
     function connect() {
-        $this->dblink = mysqli_connect('localhost', 'u202101977', 'u202101977', 'db202101977');
-        if (!$this->dblink) {
-            die('CAN NOT CONNECT: ' . mysqli_connect_error());
+        $this->dblink = new mysqli('localhost', 'u202101977', 'u202101977', 'db202101977');
+        if ($this->dblink->connect_error) {
+            die('CAN NOT CONNECT: ' . $this->dblink->connect_error);
         } else {
             echo 'Connected successfully to the database.<br>'; // Debugging line
         }
@@ -33,40 +32,38 @@ class Database {
     }
 
     function close() {
-        mysqli_close($this->dblink);
+        $this->dblink->close();
     }
 
-    function querySQL($sql) {
+    function querySQL($sql, $params = []) {
         if ($sql != null && $sql != '') {
-            $result = mysqli_query($this->dblink, $sql);
-            if (!$result) {
-                die('Query error: ' . mysqli_error($this->dblink)); // Debugging line
+            $stmt = $this->dblink->prepare($sql);
+            if ($params) {
+                $types = str_repeat('s', count($params));
+                $stmt->bind_param($types, ...$params);
             }
-            return $result;
+            $stmt->execute();
+            return $stmt;
         }
         return null;
     }
 
-    function singleFetch($sql) {
+    function singleFetch($sql, $params = []) {
         $fet = null;
         if ($sql != null && $sql != '') {
-            $res = mysqli_query($this->dblink, $sql);
-            if (!$res) {
-                die('Error in query: ' . mysqli_error($this->dblink)); // Debugging line
-            }
-            $fet = mysqli_fetch_object($res);
+            $stmt = $this->querySQL($sql, $params);
+            $result = $stmt->get_result();
+            $fet = $result->fetch_object();
         }
         return $fet;
     }
 
-    function multiFetch($sql) {
+    function multiFetch($sql, $params = []) {
         $result = [];
         if ($sql != null && $sql != '') {
-            $res = mysqli_query($this->dblink, $sql);
-            if (!$res) {
-                die('Error in query: ' . mysqli_error($this->dblink)); // Debugging line
-            }
-            while ($fet = mysqli_fetch_object($res)) {
+            $stmt = $this->querySQL($sql, $params);
+            $res = $stmt->get_result();
+            while ($fet = $res->fetch_object()) {
                 $result[] = $fet;
             }
             echo 'Fetched ' . count($result) . ' rows.<br>'; // Debugging line
@@ -75,20 +72,21 @@ class Database {
     }
 
     function mkSafe($string) {
-        return mysqli_real_escape_string($this->dblink, $string);
+        return $this->dblink->real_escape_string($string);
     }
 
-    function getRows($sql) {
+    function getRows($sql, $params = []) {
         $rows = 0;
         if ($sql != null && $sql != '') {
-            $result = mysqli_query($this->dblink, $sql);
-            $rows = mysqli_num_rows($result);
+            $stmt = $this->querySQL($sql, $params);
+            $res = $stmt->get_result();
+            $rows = $res->num_rows;
         }
         return $rows;
     }
 
-    function prepare($query) {
-        return mysqli_prepare($this->dblink, $query);
+    public function getLastInsertId() {
+        return $this->dblink->insert_id;
     }
 }
 ?>
