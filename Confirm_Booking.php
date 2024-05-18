@@ -28,7 +28,7 @@
         .hall-image { 
             max-width: 80%; 
             height: auto; 
-            border-radius: 10px; 
+            border-radius: 15px;  /* Make the corners round */
         }
         .hall-description { 
             margin-bottom: 10px; 
@@ -86,16 +86,23 @@
         include 'Database.php';
         $db = Database::getInstance();
 
-        // Get hallId, hallName, date, duration, audience, time, and end_date from POST data
-        $hallId = isset($_POST['hallId']) ? $_POST['hallId'] : null;
-        $hallName = isset($_POST['hallName']) ? $_POST['hallName'] : null;
-        $date = isset($_POST['start_date']) ? $_POST['start_date'] : null;
-        $duration = isset($_POST['duration']) ? $_POST['duration'] : null;
-        $endDate = isset($_POST['end_date']) ? $_POST['end_date'] : null;
-        $audience = isset($_POST['audience']) ? $_POST['audience'] : null;
-        $time = isset($_POST['availableTime']) ? $_POST['availableTime'] : null;
-        $hallImage = isset($_POST['hallImage']) ? $_POST['hallImage'] : null;
-        $rentalDetails = isset($_POST['rentalDetails']) ? $_POST['rentalDetails'] : null;
+        // Get booking details from POST or GET data
+        $hallId = isset($_POST['hallId']) ? $_POST['hallId'] : (isset($_GET['hallId']) ? $_GET['hallId'] : null);
+        $hallName = isset($_POST['hallName']) ? $_POST['hallName'] : (isset($_GET['hallName']) ? $_GET['hallName'] : null);
+        $startDate = isset($_POST['start_date']) ? $_POST['start_date'] : (isset($_GET['start_date']) ? $_GET['start_date'] : null);
+        $duration = isset($_POST['duration']) ? $_POST['duration'] : (isset($_GET['duration']) ? $_GET['duration'] : null);
+        $endDate = isset($_POST['end_date']) ? $_POST['end_date'] : (isset($_GET['end_date']) ? $_GET['end_date'] : null);
+        $audience = isset($_POST['audience']) ? $_POST['audience'] : (isset($_GET['audience']) ? $_GET['audience'] : null);
+        $time = isset($_POST['time']) ? $_POST['time'] : (isset($_GET['time']) ? $_GET['time'] : null);
+        $hallImage = isset($_POST['hallImage']) ? $_POST['hallImage'] : (isset($_GET['hallImage']) ? $_GET['hallImage'] : null);
+        $rentalDetails = isset($_POST['rentalDetails']) ? $_POST['rentalDetails'] : (isset($_GET['rentalDetails']) ? $_GET['rentalDetails'] : null);
+
+        // Calculate end date if not provided
+        if (!$endDate && $startDate && $duration) {
+            $startDateObj = new DateTime($startDate);
+            $startDateObj->add(new DateInterval('P' . $duration . 'D'));
+            $endDate = $startDateObj->format('Y-m-d');
+        }
 
         // Fetch hall details based on hallId
         $hallDescription = '';
@@ -116,7 +123,7 @@
 
         <div class="reservation-details">
             <h3><b>Reservation Details</b></h3>
-            <p>Start Date: <?php echo htmlspecialchars($date); ?></p>
+            <p>Start Date: <?php echo htmlspecialchars($startDate); ?></p>
             <p>End Date: <?php echo htmlspecialchars($endDate); ?></p>
             <p>Duration: <?php echo htmlspecialchars($duration); ?> days</p>
             <p>Number of Audience: <?php echo htmlspecialchars($audience); ?></p>
@@ -128,7 +135,7 @@
             <form method="post" action="update_page.php">
                 <input type="hidden" name="hallId" value="<?php echo htmlspecialchars($hallId); ?>">
                 <input type="hidden" name="hallName" value="<?php echo htmlspecialchars($hallName); ?>">
-                <input type="hidden" name="start_date" value="<?php echo htmlspecialchars($date); ?>">
+                <input type="hidden" name="start_date" value="<?php echo htmlspecialchars($startDate); ?>">
                 <input type="hidden" name="duration" value="<?php echo htmlspecialchars($duration); ?>">
                 <input type="hidden" name="end_date" value="<?php echo htmlspecialchars($endDate); ?>">
                 <input type="hidden" name="audience" value="<?php echo htmlspecialchars($audience); ?>">
@@ -140,7 +147,7 @@
             <form method="post" action="select_services.php">
                 <input type="hidden" name="hallId" value="<?php echo htmlspecialchars($hallId); ?>">
                 <input type="hidden" name="hallName" value="<?php echo htmlspecialchars($hallName); ?>">
-                <input type="hidden" name="start_date" value="<?php echo htmlspecialchars($date); ?>">
+                <input type="hidden" name="start_date" value="<?php echo htmlspecialchars($startDate); ?>">
                 <input type="hidden" name="duration" value="<?php echo htmlspecialchars($duration); ?>">
                 <input type="hidden" name="end_date" value="<?php echo htmlspecialchars($endDate); ?>">
                 <input type="hidden" name="audience" value="<?php echo htmlspecialchars($audience); ?>">
