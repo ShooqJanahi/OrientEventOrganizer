@@ -97,8 +97,8 @@
         $hallImage = isset($_POST['hallImage']) ? $_POST['hallImage'] : (isset($_GET['hallImage']) ? $_GET['hallImage'] : null);
         $rentalDetails = isset($_POST['rentalDetails']) ? $_POST['rentalDetails'] : (isset($_GET['rentalDetails']) ? $_GET['rentalDetails'] : null);
 
-        // Calculate end date if not provided
-        if (!$endDate && $startDate && $duration) {
+        // Calculate end date based on start date and duration
+        if ($startDate && $duration) {
             $startDateObj = new DateTime($startDate);
             $startDateObj->add(new DateInterval('P' . $duration . 'D'));
             $endDate = $startDateObj->format('Y-m-d');
@@ -106,12 +106,25 @@
 
         // Fetch hall details based on hallId
         $hallDescription = '';
+        $rentalCharge = 0;
         if ($hallId) {
-            $sql = "SELECT description FROM dbProj_Hall WHERE hallId = $hallId";
+            $sql = "SELECT description, rentalCharge FROM dbProj_Hall WHERE hallId = $hallId";
             $hall = $db->singleFetch($sql);
             if ($hall) {
                 $hallDescription = $hall->description;
+                $rentalCharge = $hall->rentalCharge;
             }
+        }
+
+        // Fetch timing details based on selected time
+        $timingSql = "SELECT timingSlotStart, timingSlotEnd FROM dpProj_HallsTimingSlots WHERE hallId = $hallId AND timingSlotStart <= '$time' AND timingSlotEnd >= '$time'";
+        $timing = $db->singleFetch($timingSql);
+        if ($timing) {
+            $timingSlotStart = new DateTime($timing->timingSlotStart);
+            $timingSlotEnd = new DateTime($timing->timingSlotEnd);
+            $interval = $timingSlotStart->diff($timingSlotEnd);
+            $hours = $interval->h + ($interval->days * 24);
+            $rentalDetails = $hours * $duration * $rentalCharge;
         }
         ?>
 
@@ -127,7 +140,7 @@
             <p>End Date: <?php echo htmlspecialchars($endDate); ?></p>
             <p>Duration: <?php echo htmlspecialchars($duration); ?> days</p>
             <p>Number of Audience: <?php echo htmlspecialchars($audience); ?></p>
-            <p>Time: <?php echo htmlspecialchars($time); ?></p>
+            <p>Time: <?php echo htmlspecialchars($timingSlotStart->format('h:i A')) . ' - ' . htmlspecialchars($timingSlotEnd->format('h:i A')); ?></p>
             <p>Rental Details: <?php echo htmlspecialchars($rentalDetails); ?> BD</p>
         </div>
 
@@ -156,7 +169,9 @@
                 <input type="hidden" name="rentalDetails" value="<?php echo htmlspecialchars($rentalDetails); ?>">
                 <input type="submit" value="Proceed">
             </form>
-            <input type="button" value="Cancel" onclick="window.location.href='main_page.php';">
+
+
+            <input type="button" value="Cancel" onclick="window.location.href='index.php';">
         </div>
     </div>
 

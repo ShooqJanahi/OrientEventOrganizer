@@ -1,3 +1,92 @@
+<?php
+ob_start(); // Start output buffering
+
+// Include the Database class
+include 'Database.php';
+$db = Database::getInstance();
+
+// Get current booking details from POST data
+$hallId = isset($_POST['hallId']) ? $_POST['hallId'] : null;
+$hallName = isset($_POST['hallName']) ? $_POST['hallName'] : null;
+$startDate = isset($_POST['start_date']) ? $_POST['start_date'] : null;
+$duration = isset($_POST['duration']) ? $_POST['duration'] : null;
+$endDate = isset($_POST['end_date']) ? $_POST['end_date'] : null;
+$audience = isset($_POST['audience']) ? $_POST['audience'] : null;
+$time = isset($_POST['time']) ? $_POST['time'] : null;
+$hallImage = isset($_POST['hallImage']) ? $_POST['hallImage'] : null;
+$rentalDetails = isset($_POST['rentalDetails']) ? $_POST['rentalDetails'] : null;
+
+// Calculate end date if not provided
+if ($startDate && $duration) {
+    $startDateObj = new DateTime($startDate);
+    $startDateObj->add(new DateInterval('P' . $duration . 'D'));
+    $endDate = $startDateObj->format('Y-m-d');
+}
+
+$errors = [];
+
+// Check availability on form submission
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_changes'])) {
+    error_log("Form submitted with POST data: " . print_r($_POST, true));
+
+    if (empty($startDate)) {
+        $errors['startDate'] = "Start date is required.";
+    }
+    if (empty($duration)) {
+        $errors['duration'] = "Duration is required.";
+    }
+    if (empty($audience) || !is_numeric($audience) || $audience <= 0) {
+        $errors['audience'] = "Number of audience must be a positive number.";
+    }
+    if (empty($time)) {
+        $errors['time'] = "Time is required.";
+    }
+
+    // Capacity check
+    if (!empty($hallId)) {
+        $capacitySql = "SELECT capacity FROM dbProj_Hall WHERE hallId = $hallId";
+        $hallCapacity = $db->singleFetch($capacitySql)->capacity;
+        if ($audience > $hallCapacity) {
+            $errors['capacity'] = "The selected hall can only accommodate up to $hallCapacity audiences. Please reduce the number of audiences.";
+        }
+    }
+
+    if (empty($errors)) {
+        $time24 = date("H:i:s", strtotime($time));
+
+        $sql = "SELECT h.hallId
+                FROM dbProj_Hall h
+                JOIN dpProj_HallsTimingSlots t ON h.hallId = t.hallId
+                WHERE h.capacity >= $audience
+                AND '$time24' BETWEEN t.timingSlotStart AND t.timingSlotEnd
+                AND NOT EXISTS (
+                    SELECT 1
+                    FROM dbProj_Reservation r
+                    WHERE r.hallId = h.hallId
+                    AND r.timingID = t.timingID
+                    AND r.startDate <= DATE_ADD('$startDate', INTERVAL $duration DAY)
+                    AND r.endDate >= '$startDate'
+                )";
+
+        $availableHalls = $db->multiFetch($sql);
+
+        if (empty($availableHalls)) {
+            if ($duration == '1') {
+                $errors['availability'] = "No halls are available for the selected date, time, and audience. Please try changing the date or reducing the number of audience.";
+            } elseif ($duration == '7') {
+                $errors['availability'] = "No halls are available for the selected week, time, and audience. Please try changing the date or reducing the number of audience.";
+            } else {
+                $errors['availability'] = "No halls are available for the selected duration, time, and audience. Please try changing the date or reducing the number of audience.";
+            }
+        } else {
+            // Redirect to confirmation page with updated details
+            header("Location: Confirm_Booking.php?hallId=$hallId&hallName=$hallName&start_date=$startDate&duration=$duration&end_date=$endDate&audience=$audience&time=$time&hallImage=$hallImage&rentalDetails=$rentalDetails");
+            exit;
+        }
+    }
+}
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -78,89 +167,6 @@
 
     <div class="container">
         <h1>Update Booking Details</h1>
-        <?php
-        // Get current booking details from POST data
-        $hallId = isset($_POST['hallId']) ? $_POST['hallId'] : null;
-        $hallName = isset($_POST['hallName']) ? $_POST['hallName'] : null;
-        $startDate = isset($_POST['start_date']) ? $_POST['start_date'] : null;
-        $duration = isset($_POST['duration']) ? $_POST['duration'] : null;
-        $endDate = isset($_POST['end_date']) ? $_POST['end_date'] : null;
-        $audience = isset($_POST['audience']) ? $_POST['audience'] : null;
-        $time = isset($_POST['time']) ? $_POST['time'] : null;
-        $hallImage = isset($_POST['hallImage']) ? $_POST['hallImage'] : null;
-        $rentalDetails = isset($_POST['rentalDetails']) ? $_POST['rentalDetails'] : null;
-
-        // Calculate end date if not provided
-        if (!$endDate && $startDate && $duration) {
-            $startDateObj = new DateTime($startDate);
-            $startDateObj->add(new DateInterval('P' . $duration . 'D'));
-            $endDate = $startDateObj->format('Y-m-d');
-        }
-
-        $errors = [];
-
-        // Check availability on form submission
-        if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_changes'])) {
-            include 'Database.php';
-            $db = Database::getInstance();
-
-            if (empty($startDate)) {
-                $errors['startDate'] = "Start date is required.";
-            }
-            if (empty($duration)) {
-                $errors['duration'] = "Duration is required.";
-            }
-            if (empty($audience) || !is_numeric($audience) || $audience <= 0) {
-                $errors['audience'] = "Number of audience must be a positive number.";
-            }
-            if (empty($time)) {
-                $errors['time'] = "Time is required.";
-            }
-
-            // Capacity check
-            if (!empty($hallId)) {
-                $capacitySql = "SELECT capacity FROM dbProj_Hall WHERE hallId = $hallId";
-                $hallCapacity = $db->singleFetch($capacitySql)->capacity;
-                if ($audience > $hallCapacity) {
-                    $errors['capacity'] = "The selected hall can only accommodate up to $hallCapacity audiences. Please reduce the number of audiences.";
-                }
-            }
-
-            if (empty($errors)) {
-                $time24 = date("H:i:s", strtotime($time));
-
-                $sql = "SELECT h.hallId
-                        FROM dbProj_Hall h
-                        JOIN dpProj_HallsTimingSlots t ON h.hallId = t.hallId
-                        WHERE h.capacity >= $audience
-                        AND '$time24' BETWEEN t.timingSlotStart AND t.timingSlotEnd
-                        AND NOT EXISTS (
-                            SELECT 1
-                            FROM dbProj_Reservation r
-                            WHERE r.hallId = h.hallId
-                            AND r.timingID = t.timingID
-                            AND r.startDate <= DATE_ADD('$startDate', INTERVAL $duration DAY)
-                            AND r.endDate >= '$startDate'
-                        )";
-
-                $availableHalls = $db->multiFetch($sql);
-
-                if (empty($availableHalls)) {
-                    if ($duration == '1') {
-                        $errors['availability'] = "No halls are available for the selected date, time, and audience. Please try changing the date or reducing the number of audience.";
-                    } elseif ($duration == '7') {
-                        $errors['availability'] = "No halls are available for the selected week, time, and audience. Please try changing the date or reducing the number of audience.";
-                    } else {
-                        $errors['availability'] = "No halls are available for the selected duration, time, and audience. Please try changing the date or reducing the number of audience.";
-                    }
-                } else {
-                    // Redirect to confirmation page with updated details
-                    header("Location: Confirm_Booking.php?hallId=$hallId&hallName=$hallName&start_date=$startDate&duration=$duration&end_date=$endDate&audience=$audience&time=$time&hallImage=$hallImage&rentalDetails=$rentalDetails");
-                    exit;
-                }
-            }
-        }
-        ?>
 
         <?php if (!empty($errors)): ?>
             <div class="error-message">
@@ -200,3 +206,7 @@
     </footer>
 </body>
 </html>
+
+<?php
+ob_end_flush(); // Send the output to the browser
+?>

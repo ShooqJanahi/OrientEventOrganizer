@@ -38,53 +38,56 @@ class Database {
         }
     }
 
-    function singleFetch($sql) {
-        $sql = $this->mkSafe($sql);
+    function singleFetch($sql, $params = []) {
         $fet = null;
-        if ($sql != null || $sql != '') {
-            $res = mysqli_query($this->dblink, $sql);
-            $fet = mysqli_fetch_object($res);
+        if ($stmt = mysqli_prepare($this->dblink, $sql)) {
+            if (!empty($params)) {
+                $types = str_repeat('s', count($params)); // assuming all parameters are strings
+                mysqli_stmt_bind_param($stmt, $types, ...$params);
+            }
+            mysqli_stmt_execute($stmt);
+            $result = mysqli_stmt_get_result($stmt);
+            $fet = mysqli_fetch_object($result);
+            mysqli_stmt_close($stmt);
         }
         return $fet;
     }
 
-    function multiFetch($sql) {
-        $sql = $this->mkSafe($sql);
-        $result = null;
+    function multiFetch($sql, $params = []) {
+        $result = [];
         $counter = 0;
-        if ($sql != null || $sql != '') {
-            $res = mysqli_query($this->dblink, $sql);
+        if ($stmt = mysqli_prepare($this->dblink, $sql)) {
+            if (!empty($params)) {
+                $types = str_repeat('s', count($params)); // assuming all parameters are strings
+                mysqli_stmt_bind_param($stmt, $types, ...$params);
+            }
+            mysqli_stmt_execute($stmt);
+            $res = mysqli_stmt_get_result($stmt);
             while ($fet = mysqli_fetch_object($res)) {
                 $result[$counter] = $fet;
                 $counter++;
             }
+            mysqli_stmt_close($stmt);
         }
         return $result;
     }
 
     function mkSafe($string) {
-        /* $string = strip_tags($string);
-          if (!get_magic_quotes_gpc()) {
-          $string = addslashes($string);
-          } else {
-          $string = stripslashes($string);
-          }
-          $string = str_ireplace("script", "blocked", $string);
-          $string = addcslashes($escaped, '%_');
-
-          $string = trim($string);*/
-          //$newString = mysqli_escape_string($this->dblink, $string); 
-
         return $string;
     }
 
-    function getRows($sql) {
+    function getRows($sql, $params = []) {
         $rows = 0;
-        if ($sql != null || $sql != '') {
-            $result = mysqli_query($this->dblink, $sql);
+        if ($stmt = mysqli_prepare($this->dblink, $sql)) {
+            if (!empty($params)) {
+                $types = str_repeat('s', count($params)); // assuming all parameters are strings
+                mysqli_stmt_bind_param($stmt, $types, ...$params);
+            }
+            mysqli_stmt_execute($stmt);
+            $result = mysqli_stmt_get_result($stmt);
             $rows = mysqli_num_rows($result);
+            mysqli_stmt_close($stmt);
         }
         return $rows;
     }
-
 }
