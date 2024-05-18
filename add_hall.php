@@ -1,13 +1,33 @@
 <?php
-include 'debugging.php';
-include 'Upload.php'; // Include the Upload class
+session_start();  // Start the session
 
-session_start(); // Ensure session is started
+// Enable error reporting for debugging
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
 
-// Set a dummy session ID for testing purposes (remove this in production)
-$_SESSION['uid'] = isset($_SESSION['uid']) ? $_SESSION['uid'] : 1;
+// Include necessary files
+include 'header.html';
+require_once 'Hall.php';
+require_once 'HallsTimingSlots.php';
+require_once 'Database.php';
+require_once 'Upload.php';
 
-if (isset($_POST['submitted'])) {
+// Ensure the uid is set in the session for demonstration purposes
+if (!isset($_SESSION['uid'])) {
+    $_SESSION['uid'] = 'test_user';  // Set a temporary uid for the session
+}
+
+// Test database connection
+$db = Database::getInstance()->getConnection();
+if ($db->connect_error) {
+    die("Connection failed: " . $db->connect_error);
+} else {
+    echo "Connected successfully to the database.<br>";
+}
+
+// Check if the form is submitted
+if (isset($_POST['submit'])) {
     $hall = new Hall();
     $hall->setHallName($_POST['hallName']);
     $hall->setLocation($_POST['location']);
@@ -15,117 +35,133 @@ if (isset($_POST['submitted'])) {
     $hall->setRentalCharge($_POST['rentalCharge']);
     $hall->setCapacity($_POST['capacity']);
 
-    // Handle file upload using the Upload class
+    // Handle image upload using Upload class
     $upload = new Upload();
-    $upload->setUploadDir('uploads/');
+    $upload->setUploadDir('images/'); // Use the existing images directory
 
-    // Ensure the upload directory exists and has the correct permissions
-    if (!$upload->check_dir($upload->getUploadDir())) {
-        if (!mkdir($upload->getUploadDir(), 0777, true)) {
-            echo '<p class="error">Failed to create upload directory</p>';
-            exit;
+    if ($upload->uploadDir($upload->getUploadDir())) {
+        $errors = $upload->upload('image');
+
+        if (empty($errors)) {
+            $hall->setImage($upload->getUploadDir() . $upload->getFilepath());
         } else {
-            chmod($upload->getUploadDir(), 0777);
-        }
-    }
-
-    $uploadErrors = $upload->upload('image');
-
-    if (empty($uploadErrors)) {
-        $hall->setImage($upload->getUploadDir() . $upload->getFilepath());
-
-        if ($hall->registerHall()) {
-            $hallId = $hall->getHallId(); // Retrieve the auto-incremented ID of the newly inserted hall
-
-            $timingSlots = $_POST['timingSlots'];
-            $allSuccess = true;
-
-            foreach ($timingSlots as $slot) {
-                $timingSlot = new HallsTimingSlots();
-                $timingSlot->setTimingSlotStart($slot['start']);
-                $timingSlot->setTimingSlotEnd($slot['end']);
-                $timingSlot->setHallId($hallId);
-
-                if (!$timingSlot->registerTimingSlot()) {
-                    $allSuccess = false;
-                    echo '<p class="error">Error adding timing slot: ' . $slot['start'] . ' - ' . $slot['end'] . '</p>';
-                }
-            }
-
-            if ($allSuccess) {
-                echo 'Hall and timing slots added successfully';
-            } else {
-                echo '<p class="error">Error adding some timing slots</p>';
-            }
-        } else {
-            echo '<p class="error">Error adding hall</p>';
+            echo '<p class="error">Image upload failed: ' . implode(', ', $errors) . '</p>';
+            include 'footer.html';
+            exit();
         }
     } else {
-        foreach ($uploadErrors as $error) {
-            echo '<p class="error">' . $error . '</p>';
+        echo '<p class="error">Upload directory is not writable.</p>';
+        include 'footer.html';
+        exit();
+    }
+
+    // Attempt to register the hall
+    if ($hall->registerHall()) {
+        echo '<p>Hall added successfully.</p>';
+        $hallId = Database::getInstance()->getLastInsertId();
+        $timingSlots = [];
+        for ($i = 0; $i < count($_POST['timingSlotStart']); $i++) {
+            $timingSlot = new HallsTimingSlots();
+            $timingSlot->setTimingSlotStart($_POST['timingSlotStart'][$i]);
+            $timingSlot->setTimingSlotEnd($_POST['timingSlotEnd'][$i]);
+            $timingSlot->setHallId($hallId);
+            $timingSlots[] = $timingSlot;
         }
-        echo '<p class="error">Error adding hall due to image upload issues</p>';
+
+        $allSlotsRegistered = true;
+        foreach ($timingSlots as $slot) {
+            if (!$slot->registerTimingSlot()) {
+                $allSlotsRegistered = false;
+                break;
+            }
+        }
+
+        if ($allSlotsRegistered) {
+            echo '<p>Hall and timing slots added successfully.</p>';
+        } else {
+            echo '<p class="error">Failed to add one or more timing slots.</p>';
+        }
+    } else {
+        echo '<p class="error">Failed to add hall.</p>';
     }
 }
-
-include 'header.html';
 ?>
 
-<h1>Add Hall</h1>
-<div id="stylized" class="myform"> 
-    <form action="add_hall.php" method="post" enctype="multipart/form-data">
-        <fieldset>
-            <label>Hall Name</label>
-            <input type="text" name="hallName" size="20" value="" />
-            <label>Image</label>
-            <input type="file" name="image" size="20" />
-            <label>Location</label>
-            <input type="text" name="location" size="20" value="" />
-            <label>Description</label>
-            <textarea name="description" rows="4" cols="50"></textarea>
-            <label>Rental Charge</label>
-            <input type="text" name="rentalCharge" size="20" value="" />
-            <label>Capacity</label>
-            <input type="number" name="capacity" size="20" value="" />
-            <label>Timing Slots</label>
-            <div id="timingSlotsContainer">
-                <div class="timingSlot">
-                    <label>Start</label>
-                    <input type="time" name="timingSlots[0][start]" size="20" value="" />
-                    <label>End</label>
-                    <input type="time" name="timingSlots[0][end]" size="20" value="" />
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Hall</title>
+    <link rel="stylesheet" type="text/css" href="css/bootstrap.min.css">
+    <style>
+        .container {
+            max-width: 600px;
+            margin-top: 50px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Add Hall</h2>
+        <form action="add_hall.php" method="post" enctype="multipart/form-data">
+            <div class="form-group">
+                <label for="hallName">Hall Name:</label>
+                <input type="text" class="form-control" id="hallName" name="hallName" required>
+            </div>
+            <div class="form-group">
+                <label for="image">Image:</label>
+                <input type="file" class="form-control" id="image" name="image" required>
+            </div>
+            <div class="form-group">
+                <label for="location">Location:</label>
+                <input type="text" class="form-control" id="location" name="location" required>
+            </div>
+            <div class="form-group">
+                <label for="description">Description:</label>
+                <textarea class="form-control" id="description" name="description" required></textarea>
+            </div>
+            <div class="form-group">
+                <label for="rentalCharge">Rental Charge:</label>
+                <input type="number" class="form-control" id="rentalCharge" name="rentalCharge" required>
+            </div>
+            <div class="form-group">
+                <label for="capacity">Capacity:</label>
+                <input type="number" class="form-control" id="capacity" name="capacity" required>
+            </div>
+            <div id="timingSlots">
+                <h4>Timing Slots</h4>
+                <div class="form-group">
+                    <label for="timingSlotStart[]">Start Time:</label>
+                    <input type="time" class="form-control" name="timingSlotStart[]" required>
+                </div>
+                <div class="form-group">
+                    <label for="timingSlotEnd[]">End Time:</label>
+                    <input type="time" class="form-control" name="timingSlotEnd[]" required>
                 </div>
             </div>
-            <div align="center">
-                <button type="button" onclick="addTimingSlot()">Add Another Timing Slot</button>
-            </div>
-            <div align="center">
-                <input type="submit" value="Add Hall" />
-            </div>  
-            <input type="hidden" name="submitted" value="1" />
-        </fieldset>
-    </form>    
-    <div class="spacer"></div>    
-</div>    
+            <button type="button" onclick="addTimingSlot()">Add Another Timing Slot</button>
+            <br><br>
+            <button type="submit" class="btn btn-primary" name="submit">Add Hall</button>
+        </form>
+    </div>
+    <script>
+        function addTimingSlot() {
+            const timingSlots = document.getElementById('timingSlots');
+            const newSlot = `
+                <div class="form-group">
+                    <label for="timingSlotStart[]">Start Time:</label>
+                    <input type="time" class="form-control" name="timingSlotStart[]" required>
+                </div>
+                <div class="form-group">
+                    <label for="timingSlotEnd[]">End Time:</label>
+                    <input type="time" class="form-control" name="timingSlotEnd[]" required>
+                </div>
+            `;
+            timingSlots.insertAdjacentHTML('beforeend', newSlot);
+        }
+    </script>
+</body>
+</html>
 
-<script>
-let timingSlotIndex = 1;
-
-function addTimingSlot() {
-    var container = document.getElementById('timingSlotsContainer');
-    var newSlot = document.createElement('div');
-    newSlot.className = 'timingSlot';
-    newSlot.innerHTML = `
-        <label>Start</label>
-        <input type="time" name="timingSlots[${timingSlotIndex}][start]" size="20" value="" />
-        <label>End</label>
-        <input type="time" name="timingSlots[${timingSlotIndex}][end]" size="20" value="" />
-    `;
-    container.appendChild(newSlot);
-    timingSlotIndex++;
-}
-</script>
-
-<?php
-include 'footer.html';
-?>
+<?php include 'footer.html'; ?>

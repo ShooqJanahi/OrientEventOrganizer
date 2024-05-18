@@ -1,6 +1,5 @@
 <?php
 
-
 class Hall {
   
     private $hallId;
@@ -79,24 +78,30 @@ class Hall {
     }
 
     // Database methods
-    public function registerHall() {
+     public function registerHall() {
         if ($this->isValid()) {
             try {
                 $db = Database::getInstance();
-                $query = "INSERT INTO dbProj_Hall (hallName, image, location, description, rentalCharge, capacity) VALUES (?, ?, ?, ?, ?, ?)";
-                $stmt = $db->prepare($query);
+                $sql = "INSERT INTO dbProj_Hall (hallName, image, location, description, rentalCharge, capacity) VALUES (?, ?, ?, ?, ?, ?)";
+                $stmt = $db->prepare($sql);
                 if ($stmt === false) {
-                    throw new Exception('Prepare failed: ' . mysqli_error($db->dblink));
+                    throw new Exception('Prepare failed: ' . $db->error);
                 }
-                mysqli_stmt_bind_param($stmt, 'ssssdi', $this->hallName, $this->image, $this->location, $this->description, $this->rentalCharge, $this->capacity);
-                $result = mysqli_stmt_execute($stmt);
-                mysqli_stmt_close($stmt);
-                return $result;
+                $stmt->bind_param('ssssdi', $this->hallName, $this->image, $this->location, $this->description, $this->rentalCharge, $this->capacity);
+                $result = $stmt->execute();
+                if ($result) {
+                    echo 'Hall registered successfully.<br>';
+                    return true;
+                } else {
+                    echo 'Error registering hall: ' . $stmt->error . '<br>';
+                    return false;
+                }
             } catch (Exception $e) {
-                echo 'Exception: ' . $e->getMessage();
+                echo 'Exception registering hall: ' . $e->getMessage() . '<br>';
                 return false;
             }
         } else {
+            echo 'Invalid data for registering hall.<br>';
             return false;
         }
     }
@@ -203,8 +208,28 @@ class Hall {
         return $data;
     }
 
+    public function getTimingSlotsByHallId($hallId) {
+        $db = Database::getInstance();
+        $query = "SELECT * FROM dpProj_HallsTimingSlots WHERE hallId = ?";
+        $stmt = $db->prepare($query);
+        if ($stmt === false) {
+            echo 'Prepare failed: ' . mysqli_error($db->dblink);
+            return false;
+        }
+        mysqli_stmt_bind_param($stmt, 'i', $hallId);
+        mysqli_stmt_execute($stmt);
+        $result = mysqli_stmt_get_result($stmt);
+        $timingSlots = [];
+        while ($slot = mysqli_fetch_object($result)) {
+            $timingSlots[] = $slot;
+        }
+        mysqli_stmt_close($stmt);
+        return $timingSlots;
+    }
+
     public function isValid() {
         return !empty($this->hallName) && !empty($this->image) && !empty($this->location) && !empty($this->rentalCharge) && !empty($this->capacity);
     }
 
 }
+?>

@@ -1,8 +1,4 @@
 <!DOCTYPE html>
-<!--
-Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
-Click nbfs://nbhost/SystemFileSystem/Templates/ClientSide/html.html to edit this template
--->
 <html>
     <head>
         <!-- basic -->
@@ -30,6 +26,48 @@ Click nbfs://nbhost/SystemFileSystem/Templates/ClientSide/html.html to edit this
         <link rel="stylesheet" href="css/jquery.mCustomScrollbar.min.css">
         <!-- Tweaks for older IEs -->
         <link rel="stylesheet" href="https://netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css">
+        <style>
+            /* Dropdown menu styles */
+            .nav-item ul {
+                display: none;
+                position: absolute;
+                background-color: #f9f9f9;
+                min-width: 200px;
+                z-index: 1;
+            }
+
+            .nav-item:hover > ul {
+                display: block;
+            }
+
+            .nav-item ul li {
+                display: block;
+                position: relative;
+            }
+
+            .nav-item ul li ul {
+                display: none;
+                position: absolute;
+                left: 100%;
+                top: 0;
+                background-color: #f9f9f9;
+            }
+
+            .nav-item ul li:hover > ul {
+                display: block;
+            }
+
+            .nav-item ul li a {
+                color: #333;
+                padding: 12px 16px;
+                text-decoration: none;
+                display: block;
+            }
+
+            .nav-item ul li a:hover {
+                background-color: #f1f1f1;
+            }
+        </style>
     </head>
     <body>
         <div class="header_section header_bg">
@@ -53,25 +91,25 @@ Click nbfs://nbhost/SystemFileSystem/Templates/ClientSide/html.html to edit this
                             <li class="nav-item">
                                 <a class="nav-link" href="shop.php">Management</a>
                                 <ul>
-                                    <li>Manage Employee
+                                    <li><a href="#">Manage Employee</a>
                                         <ul>
                                             <li><a href="add_employee.php">Add Employee</a></li>
                                             <li><a href="view_employees.php">View Employee</a></li>
                                         </ul>
                                     </li>
-                                    <li>Manage Halls
+                                    <li><a href="#">Manage Halls</a>
                                         <ul>
                                             <li><a href="add_hall.php">Add Hall</a></li>
-                                            <li><a href="viewHalls.php">View Halls</a></li>
+                                            <li><a href="view_halls.php">View Halls</a></li>
                                         </ul>
                                     </li>
-                                    <li>Manage Clients
+                                    <li><a href="#">Manage Clients</a>
                                         <ul>
                                             <li><a href="add_client.php">Add Client</a></li>
                                             <li><a href="view_clients.php">View Clients</a></li>
                                         </ul>
                                     </li>
-                                    <li>Manage Catering Menu details
+                                    <li><a href="#">Manage Catering Menu details</a>
                                         <ul>
                                             <li><a href="add_menu.php">Add Menu</a></li>
                                             <li><a href="view_menus.php">View Menu</a></li>

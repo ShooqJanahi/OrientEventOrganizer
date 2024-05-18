@@ -15,6 +15,9 @@ class Database {
             $this->connect();
         }
     }
+     public function getConnection() {
+        return $this->dblink;
+    }
 
     function connect() {
         $this->dblink = new mysqli('localhost', 'u202101977', 'u202101977', 'db202101977');
@@ -34,6 +37,8 @@ class Database {
     function close() {
         $this->dblink->close();
     }
+    
+    
 
     function querySQL($sql, $params = []) {
         if ($sql != null && $sql != '') {
@@ -87,6 +92,9 @@ class Database {
 
     public function getLastInsertId() {
         return $this->dblink->insert_id;
+    } 
+  public function prepare($query) {
+        return $this->dblink->prepare($query);
     }
 }
 ?>
