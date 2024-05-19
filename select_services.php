@@ -31,6 +31,13 @@
         .service-option:hover, .menu-option:hover {
             background-color: lightgray;
         }
+        .details {
+            display: none;
+            margin-top: 10px;
+            text-align: left;
+            padding: 10px;
+            border: 1px solid black;
+        }
         .form-buttons input { 
             padding: 10px 20px; 
             margin-right: 10px; 
@@ -70,53 +77,88 @@
     </style>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
-       $(document).ready(function(){
-    // Calculate total price function
-    function calculateTotalPrice() {
-        var total = 0;
-        $(".menu-option input[type=checkbox]:checked").each(function(){
-            total += parseFloat($(this).data("price"));
-        });
-        $(".service-option input[type=checkbox]:checked").each(function(){
-            total += parseFloat($(this).data("price"));
-        });
-        $("#total-price").text("Total Price: " + total + " BD");
-    }
+        $(document).ready(function(){
+            // Retrieve the necessary variables from the confirm page
+            var audience = <?php echo isset($_POST['audience']) ? (int)$_POST['audience'] : 1; ?>;
+            var duration = <?php echo isset($_POST['duration']) ? (int)$_POST['duration'] : 1; ?>;
+            var startTime = '<?php echo isset($_POST['start_time']) ? $_POST['start_time'] : '12:00 PM'; ?>';
+            var endTime = '<?php echo isset($_POST['end_time']) ? $_POST['end_time'] : '05:00 PM'; ?>';
 
-    // Fetch and display menu details
-    $(".menu-option input[type=checkbox]").change(function(){
-        var selected = $(this).data("menu-id");
-        $.ajax({
-            url: "fetch_menu.php",
-            type: "POST",
-            data: {menuId: selected},
-            success: function(response){
-                $("#menu-details").html(response);
-                calculateTotalPrice();
+            // Convert time to 24-hour format
+            function convertTo24HourFormat(time) {
+                var hours = parseInt(time.split(':')[0]);
+                var minutes = parseInt(time.split(':')[1].split(' ')[0]);
+                var ampm = time.split(' ')[1];
+                if (ampm === 'PM' && hours < 12) hours += 12;
+                if (ampm === 'AM' && hours === 12) hours = 0;
+                return hours + (minutes / 60);
             }
-        });
-    });
 
-    // Fetch and display service details
-    $(".service-option input[type=checkbox]").change(function(){
-        var selected = $(this).data("service-id");
-        $.ajax({
-            url: "fetch_service.php",
-            type: "POST",
-            data: {serviceId: selected},
-            success: function(response){
-                $("#service-details").html(response);
-                calculateTotalPrice();
+            var startTime24 = convertTo24HourFormat(startTime);
+            var endTime24 = convertTo24HourFormat(endTime);
+            var hours = endTime24 - startTime24;
+
+            // Calculate total price function
+            function calculateTotalPrice() {
+                var totalCatering = 0;
+                var totalServices = 0;
+                $(".menu-option input[type=checkbox]:checked").each(function(){
+                    totalCatering += parseFloat($(this).data("price")) * audience;
+                });
+                $(".service-option input[type=checkbox]:checked").each(function(){
+                    totalServices += parseFloat($(this).data("price")) * hours * duration;
+                });
+                var totalPrice = totalCatering + totalServices;
+                $("#total-price").text("Total Price: " + totalPrice + " BD");
             }
+
+            // Fetch and display menu details
+            $(".menu-option input[type=checkbox]").change(function(){
+                var selected = $(this).data("menu-id");
+                var detailsDiv = $(this).closest('.menu-option').find('.details');
+                if ($(this).is(':checked')) {
+                    $.ajax({
+                        url: "fetch_menu.php",
+                        type: "POST",
+                        data: {menuId: selected},
+                        success: function(response){
+                            detailsDiv.html(response);
+                            detailsDiv.show();
+                            calculateTotalPrice();
+                        }
+                    });
+                } else {
+                    detailsDiv.hide();
+                    calculateTotalPrice();
+                }
+            });
+
+            // Fetch and display service details
+            $(".service-option input[type=checkbox]").change(function(){
+                var selected = $(this).data("service-id");
+                var detailsDiv = $(this).closest('.service-option').find('.details');
+                if ($(this).is(':checked')) {
+                    $.ajax({
+                        url: "fetch_service.php",
+                        type: "POST",
+                        data: {serviceId: selected},
+                        success: function(response){
+                            detailsDiv.html(response);
+                            detailsDiv.show();
+                            calculateTotalPrice();
+                        }
+                    });
+                } else {
+                    detailsDiv.hide();
+                    calculateTotalPrice();
+                }
+            });
+
+            // Calculate total price on checkbox change
+            $(".menu-option input[type=checkbox], .service-option input[type=checkbox]").change(function(){
+                calculateTotalPrice();
+            });
         });
-    });
-
-    // Calculate total price on checkbox change
-    $(".menu-option input[type=checkbox], .service-option input[type=checkbox]").change(function(){
-        calculateTotalPrice();
-    });
-});
-
     </script>
 </head>
 <body>
@@ -131,29 +173,30 @@
             <div class="menu-option">
                 <label>
                     <input type="checkbox" data-menu-id="1" data-price="10">
-                    <span>Breakfast - 10 BD</span>
+                    <span>Breakfast - 10 BD per person</span>
                 </label>
+                <div class="details"></div>
             </div>
             <div class="menu-option">
                 <label>
                     <input type="checkbox" data-menu-id="2" data-price="12">
-                    <span>Lunch - 12 BD</span>
+                    <span>Lunch - 12 BD per person</span>
                 </label>
+                <div class="details"></div>
             </div>
             <div class="menu-option">
                 <label>
                     <input type="checkbox" data-menu-id="3" data-price="5">
-                    <span>Hot Beverages - 5 BD</span>
+                    <span>Hot Beverages - 5 BD per person</span>
                 </label>
+                <div class="details"></div>
             </div>
             <div class="menu-option">
                 <label>
                     <input type="checkbox" data-menu-id="4" data-price="3">
-                    <span>Cold Beverages - 3 BD</span>
+                    <span>Cold Beverages - 3 BD per person</span>
                 </label>
-            </div>
-            <div id="menu-details">
-                <p>Menu details will be displayed here.</p>
+                <div class="details"></div>
             </div>
         </div>
         <div>
@@ -161,20 +204,23 @@
             <div class="service-option">
                 <label>
                     <input type="checkbox" data-service-id="1" data-price="150">
-                    <span>Decor and Theme Design - 150 BD</span>
+                    <span>Decor and Theme Design - 150 BD per hour</span>
                 </label>
+                <div class="details"></div>
             </div>
             <div class="service-option">
                 <label>
                     <input type="checkbox" data-service-id="2" data-price="100">
-                    <span>Audiovisual Equipment Rental - 100 BD</span>
+                    <span>Audiovisual Equipment Rental - 100 BD per hour</span>
                 </label>
+                <div class="details"></div>
             </div>
             <div class="service-option">
                 <label>
                     <input type="checkbox" data-service-id="3" data-price="120">
-                    <span>Event Photography and Videography - 120 BD</span>
+                    <span>Event Photography and Videography - 120 BD per hour</span>
                 </label>
+                <div class="details"></div>
             </div>
         </div>
         <div id="total-price">
@@ -182,6 +228,15 @@
         </div>
         <div class="form-buttons">
             <form method="post" action="confirm_booking.php">
+                <input type="hidden" name="hallId" value="<?php echo htmlspecialchars($hallId); ?>">
+                <input type="hidden" name="hallName" value="<?php echo htmlspecialchars($hallName); ?>">
+                <input type="hidden" name="start_date" value="<?php echo htmlspecialchars($startDate); ?>">
+                <input type="hidden" name="duration" value="<?php echo htmlspecialchars($duration); ?>">
+                <input type="hidden" name="end_date" value="<?php echo htmlspecialchars($endDate); ?>">
+                <input type="hidden" name="audience" value="<?php echo htmlspecialchars($audience); ?>">
+                <input type="hidden" name="time" value="<?php echo htmlspecialchars($time); ?>">
+                <input type="hidden" name="hallImage" value="<?php echo htmlspecialchars($hallImage); ?>">
+                <input type="hidden" name="rentalDetails" value="<?php echo htmlspecialchars($rentalDetails); ?>">
                 <input type="submit" value="Proceed">
             </form>
             <input type="button" value="Cancel" onclick="window.location.href='main_page.php';">

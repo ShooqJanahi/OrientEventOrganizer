@@ -96,6 +96,10 @@ function convertTo12HourFormat($time) {
             background-color: red;
             color: white;
         }
+        .select-button:disabled {
+            background-color: grey;
+            cursor: not-allowed;
+        }
         .hidden-column {
             display: none;
         }
@@ -148,15 +152,27 @@ function convertTo12HourFormat($time) {
             }
         }
 
+        function checkRequiredFields() {
+            var numberOfAudience = document.getElementById('numberOfAudience').value;
+            var selectDate = document.getElementById('selectDate').value;
+            var time = document.getElementById('time').value;
+            var duration = document.getElementById('duration').value;
+            var bookButtons = document.getElementsByClassName('select-button');
+
+            var allFieldsFilled = numberOfAudience && selectDate && time && duration;
+
+            for (var i = 0; i < bookButtons.length; i++) {
+                bookButtons[i].disabled = !allFieldsFilled;
+            }
+        }
+
         window.onload = function() {
-            var searchForm = document.getElementById('searchForm');
-            searchForm.addEventListener('submit', function(event) {
-                if (!validateSearchForm()) {
-                    event.preventDefault();
-                } else {
-                    toggleRentalDetails();
-                }
-            });
+            checkRequiredFields(); // Initial check
+
+            document.getElementById('numberOfAudience').addEventListener('input', checkRequiredFields);
+            document.getElementById('selectDate').addEventListener('input', checkRequiredFields);
+            document.getElementById('time').addEventListener('input', checkRequiredFields);
+            document.getElementById('duration').addEventListener('input', checkRequiredFields);
         }
     </script>
 </head>
