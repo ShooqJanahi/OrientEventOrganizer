@@ -18,16 +18,25 @@ function convertTo24HourFormat($time) {
 // Convert the input time to 24-hour format for comparison
 $time24 = !empty($time) ? convertTo24HourFormat($time) : '';
 
-$sql = "SELECT h.hallId, h.hallName, h.location, h.capacity, h.description, h.image, h.rentalCharge, t.timingSlotStart, t.timingSlotEnd
-        FROM dbProj_Hall h
-        JOIN dpProj_HallsTimingSlots t ON h.hallId = t.hallId
-        WHERE 1=1";
+$sql = "SELECT h.hallId, h.hallName, h.location, h.capacity, h.description, h.image, h.rentalCharge";
+
+if (!empty($time24)) {
+    $sql .= ", t.timingSlotStart, t.timingSlotEnd";
+}
+
+$sql .= " FROM dbProj_Hall h";
+
+if (!empty($time24)) {
+    $sql .= " JOIN dpProj_HallsTimingSlots t ON h.hallId = t.hallId";
+}
+
+$sql .= " WHERE 1=1";
 
 if (!empty($numberOfAudience)) {
     $sql .= " AND h.capacity >= $numberOfAudience";
 }
 if (!empty($searchTerm)) {
-    $sql .= " AND (h.hallName LIKE '%$searchTerm%' OR h.description LIKE '%$searchTerm%')";
+    $sql .= " AND MATCH(h.hallName, h.description) AGAINST ('$searchTerm' IN NATURAL LANGUAGE MODE)";
 }
 if (!empty($selectDate) && !empty($duration)) {
     $sql .= " AND NOT EXISTS (
@@ -116,23 +125,9 @@ function convertTo12HourFormat($time) {
             var errorMessage = document.getElementById('errorMessage');
             var durationErrorMessage = document.getElementById('durationErrorMessage');
 
-            if (!numberOfAudience) {
-                errorMessage.textContent = 'Please fill out this field.';
-                document.getElementById('numberOfAudience').focus();
-                return false;
-            }
-            if (!selectDate) {
-                errorMessage.textContent = 'Please fill out this field.';
-                document.getElementById('selectDate').focus();
-                return false;
-            }
-            if (!time) {
-                errorMessage.textContent = 'Please fill out this field.';
-                document.getElementById('time').focus();
-                return false;
-            }
-            if (!duration) {
-                durationErrorMessage.textContent = 'Please select a duration.';
+            // Check if start date is entered without duration
+            if (selectDate && !duration) {
+                durationErrorMessage.textContent = 'Please select a duration when a start date is entered.';
                 document.getElementById('duration').focus();
                 return false;
             }
@@ -142,24 +137,15 @@ function convertTo12HourFormat($time) {
             return true;
         }
 
-        function toggleRentalDetails() {
-            var rentalDetailsCells = document.getElementsByClassName('rental-details-cell');
-            var rentalDetailsHeader = document.getElementById('rental-details-header');
-
-            rentalDetailsHeader.classList.remove('hidden-column');
-            for (var i = 0; i < rentalDetailsCells.length; i++) {
-                rentalDetailsCells[i].classList.remove('hidden-column');
-            }
-        }
-
         function checkRequiredFields() {
             var numberOfAudience = document.getElementById('numberOfAudience').value;
             var selectDate = document.getElementById('selectDate').value;
             var time = document.getElementById('time').value;
             var duration = document.getElementById('duration').value;
+            var searchTerm = document.getElementById('searchTerm').value;
             var bookButtons = document.getElementsByClassName('select-button');
 
-            var allFieldsFilled = numberOfAudience && selectDate && time && duration;
+            var allFieldsFilled = numberOfAudience || selectDate || time || duration || searchTerm;
 
             for (var i = 0; i < bookButtons.length; i++) {
                 bookButtons[i].disabled = !allFieldsFilled;
@@ -173,6 +159,7 @@ function convertTo12HourFormat($time) {
             document.getElementById('selectDate').addEventListener('input', checkRequiredFields);
             document.getElementById('time').addEventListener('input', checkRequiredFields);
             document.getElementById('duration').addEventListener('input', checkRequiredFields);
+            document.getElementById('searchTerm').addEventListener('input', checkRequiredFields);
         }
     </script>
 </head>
@@ -182,15 +169,15 @@ function convertTo12HourFormat($time) {
     <div class="search_section layout_padding">
         <div class="container">
             <h1>Search for Halls</h1>
-            <form id="searchForm" method="get" action="searchAndBooking.php">
+            <form id="searchForm" method="get" action="searchAndBooking.php" onsubmit="return validateSearchForm();">
                 <div class="form-section">
                     <label for="numberOfAudience">Number of Audience:</label>
-                    <input type="number" id="numberOfAudience" name="numberOfAudience" value="<?php echo htmlspecialchars($numberOfAudience); ?>" required>
+                    <input type="number" id="numberOfAudience" name="numberOfAudience" value="<?php echo htmlspecialchars($numberOfAudience); ?>" min="0">
                     <label for="selectDate">Select Date:</label>
-                    <input type="date" id="selectDate" name="selectDate" value="<?php echo htmlspecialchars($selectDate); ?>" required>
+                    <input type="date" id="selectDate" name="selectDate" value="<?php echo htmlspecialchars($selectDate); ?>" min="<?php echo date('Y-m-d'); ?>">
                     <label for="time">Time:</label>
-                    <input type="time" id="time" name="time" value="<?php echo htmlspecialchars($time); ?>" required>
-                    <select id="duration" name="duration" required>
+                    <input type="time" id="time" name="time" value="<?php echo htmlspecialchars($time); ?>">
+                    <select id="duration" name="duration">
                         <option value="">Select Duration</option>
                         <option value="1" <?php echo ($duration == '1') ? 'selected' : ''; ?>>1 Day</option>
                         <option value="7" <?php echo ($duration == '7') ? 'selected' : ''; ?>>1 Week</option>
@@ -216,7 +203,9 @@ function convertTo12HourFormat($time) {
                         <th>Capacity</th>
                         <th>Description</th>
                         <th>Picture</th>
-                        <th>Available Time</th>
+                        <?php if (!empty($time24)) : ?>
+                            <th>Available Time</th>
+                        <?php endif; ?>
                         <th id="rental-details-header" class="<?php echo empty($duration) ? 'hidden-column' : ''; ?>">Rental Details</th>
                         <th class="action-column">Action</th>
                     </tr>
@@ -238,21 +227,24 @@ function convertTo12HourFormat($time) {
                                 <td><?php echo htmlspecialchars($hall->capacity); ?></td>
                                 <td><?php echo htmlspecialchars($hall->description); ?></td>
                                 <td><img src="<?php echo htmlspecialchars($hall->image); ?>" alt="<?php echo htmlspecialchars($hall->hallName); ?>"></td>
-                                <td><?php echo convertTo12HourFormat($hall->timingSlotStart); ?> - <?php echo convertTo12HourFormat($hall->timingSlotEnd); ?></td>
+                                <?php if (!empty($time24)) : ?>
+                                    <td><?php echo convertTo12HourFormat($hall->timingSlotStart); ?> - <?php echo convertTo12HourFormat($hall->timingSlotEnd); ?></td>
+                                <?php endif; ?>
                                 <td class="rental-details-cell <?php echo empty($duration) ? 'hidden-column' : ''; ?>"><?php echo htmlspecialchars($totalRentalDetails); ?></td>
                                 <td class="action-column">
-                                    <form method="post" action="Confirm_Booking.php">
-                                        <input type="hidden" name="hallId" value="<?php echo htmlspecialchars($hall->hallId); ?>">
-                                        <input type="hidden" name="hallName" value="<?php echo htmlspecialchars($hall->hallName); ?>">
-                                        <input type="hidden" name="start_date" value="<?php echo htmlspecialchars($selectDate); ?>">
-                                        <input type="hidden" name="duration" value="<?php echo htmlspecialchars($duration); ?>">
-                                        <input type="hidden" name="end_date" value="<?php echo htmlspecialchars($endDate); ?>">
-                                        <input type="hidden" name="audience" value="<?php echo htmlspecialchars($numberOfAudience); ?>">
-                                        <input type="hidden" name="time" value="<?php echo convertTo12HourFormat($hall->timingSlotStart) . ' - ' . convertTo12HourFormat($hall->timingSlotEnd); ?>">
-                                        <input type="hidden" name="hallImage" value="<?php echo htmlspecialchars($hall->image); ?>">
-                                        <input type="hidden" name="rentalDetails" value="<?php echo htmlspecialchars($totalRentalDetails); ?>">
-                                        <input type="submit" class="select-button" value="Book an Event">
-                                    </form>
+                                   <form method="get" action="booking_form.php">
+    <input type="hidden" name="hallId" value="<?php echo htmlspecialchars($hall->hallId); ?>">
+    <input type="hidden" name="hallName" value="<?php echo htmlspecialchars($hall->hallName); ?>">
+    <input type="hidden" name="startDate" value="<?php echo htmlspecialchars($selectDate); ?>">
+    <input type="hidden" name="duration" value="<?php echo htmlspecialchars($duration); ?>">
+    <input type="hidden" name="numberOfAudience" value="<?php echo htmlspecialchars($numberOfAudience); ?>">
+    <input type="hidden" name="time" value="<?php echo htmlspecialchars($time); ?>">
+    <input type="hidden" name="hallImage" value="<?php echo htmlspecialchars($hall->image); ?>">
+    <input type="hidden" name="rentalDetails" value="<?php echo htmlspecialchars($totalRentalDetails); ?>">
+    <input type="hidden" name="timingSlotStart" value="<?php echo htmlspecialchars($hall->timingSlotStart); ?>">
+    <input type="hidden" name="timingSlotEnd" value="<?php echo htmlspecialchars($hall->timingSlotEnd); ?>">
+    <input type="submit" class="select-button" value="Book an Event">
+</form>
                                 </td>
                             </tr>
                         <?php endforeach; ?>

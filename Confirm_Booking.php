@@ -89,10 +89,9 @@
         // Get booking details from POST or GET data
         $hallId = isset($_POST['hallId']) ? $_POST['hallId'] : (isset($_GET['hallId']) ? $_GET['hallId'] : null);
         $hallName = isset($_POST['hallName']) ? $_POST['hallName'] : (isset($_GET['hallName']) ? $_GET['hallName'] : null);
-        $startDate = isset($_POST['start_date']) ? $_POST['start_date'] : (isset($_GET['start_date']) ? $_GET['start_date'] : null);
+        $startDate = isset($_POST['startDate']) ? $_POST['startDate'] : (isset($_GET['startDate']) ? $_GET['startDate'] : null);
         $duration = isset($_POST['duration']) ? $_POST['duration'] : (isset($_GET['duration']) ? $_GET['duration'] : null);
-        $endDate = isset($_POST['end_date']) ? $_POST['end_date'] : (isset($_GET['end_date']) ? $_GET['end_date'] : null);
-        $audience = isset($_POST['audience']) ? $_POST['audience'] : (isset($_GET['audience']) ? $_GET['audience'] : null);
+        $numberOfAudience = isset($_POST['numberOfAudience']) ? $_POST['numberOfAudience'] : (isset($_GET['numberOfAudience']) ? $_GET['numberOfAudience'] : null);
         $time = isset($_POST['time']) ? $_POST['time'] : (isset($_GET['time']) ? $_GET['time'] : null);
         $hallImage = isset($_POST['hallImage']) ? $_POST['hallImage'] : (isset($_GET['hallImage']) ? $_GET['hallImage'] : null);
         $rentalDetails = isset($_POST['rentalDetails']) ? $_POST['rentalDetails'] : (isset($_GET['rentalDetails']) ? $_GET['rentalDetails'] : null);
@@ -108,70 +107,84 @@
         $hallDescription = '';
         $rentalCharge = 0;
         if ($hallId) {
-            $sql = "SELECT description, rentalCharge FROM dbProj_Hall WHERE hallId = $hallId";
-            $hall = $db->singleFetch($sql);
-            if ($hall) {
-                $hallDescription = $hall->description;
-                $rentalCharge = $hall->rentalCharge;
+            $sql = "SELECT description, rentalCharge FROM dbProj_Hall WHERE hallId = ?";
+            $stmt = $db->prepare($sql);
+            $stmt->bind_param("i", $hallId);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            if ($hall = $result->fetch_assoc()) {
+                $hallDescription = $hall['description'];
+                $rentalCharge = $hall['rentalCharge'];
             }
         }
 
         // Fetch timing details based on selected time
-        $timingSql = "SELECT timingSlotStart, timingSlotEnd FROM dpProj_HallsTimingSlots WHERE hallId = $hallId AND timingSlotStart <= '$time' AND timingSlotEnd >= '$time'";
-        $timing = $db->singleFetch($timingSql);
-        if ($timing) {
-            $timingSlotStart = new DateTime($timing->timingSlotStart);
-            $timingSlotEnd = new DateTime($timing->timingSlotEnd);
+        $timingSql = "SELECT timingSlotStart, timingSlotEnd FROM dpProj_HallsTimingSlots WHERE hallId = ? AND timingSlotStart <= ? AND timingSlotEnd >= ?";
+        $stmt = $db->prepare($timingSql);
+        $stmt->bind_param("iss", $hallId, $time, $time);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        if ($timing = $result->fetch_assoc()) {
+            $timingSlotStart = new DateTime($timing['timingSlotStart']);
+            $timingSlotEnd = new DateTime($timing['timingSlotEnd']);
             $interval = $timingSlotStart->diff($timingSlotEnd);
             $hours = $interval->h + ($interval->days * 24);
             $rentalDetails = $hours * $duration * $rentalCharge;
         }
+
+        // Ensure all details are available for display
+        $hallName = htmlspecialchars($hallName);
+        $startDate = htmlspecialchars($startDate);
+        $endDate = htmlspecialchars($endDate);
+        $duration = htmlspecialchars($duration);
+        $numberOfAudience = htmlspecialchars($numberOfAudience);
+        $time = htmlspecialchars($time);
+        $hallImage = htmlspecialchars($hallImage);
+        $rentalDetails = htmlspecialchars($rentalDetails);
         ?>
 
         <div class="hall-details">
-            <h2><?php echo htmlspecialchars($hallName); ?></h2>
-            <img class="hall-image" src="<?php echo htmlspecialchars($hallImage); ?>" alt="<?php echo htmlspecialchars($hallName); ?>">
-            <p class="hall-description"><?php echo htmlspecialchars($hallDescription); ?></p>
+            <h2><?php echo $hallName; ?></h2>
+            <img class="hall-image" src="<?php echo $hallImage; ?>" alt="<?php echo $hallName; ?>">
+            <p class="hall-description"><?php echo $hallDescription; ?></p>
         </div>
 
         <div class="reservation-details">
             <h3><b>Reservation Details</b></h3>
-            <p>Start Date: <?php echo htmlspecialchars($startDate); ?></p>
-            <p>End Date: <?php echo htmlspecialchars($endDate); ?></p>
-            <p>Duration: <?php echo htmlspecialchars($duration); ?> days</p>
-            <p>Number of Audience: <?php echo htmlspecialchars($audience); ?></p>
-            <p>Time: <?php echo htmlspecialchars($timingSlotStart->format('h:i A')) . ' - ' . htmlspecialchars($timingSlotEnd->format('h:i A')); ?></p>
-            <p>Rental Details: <?php echo htmlspecialchars($rentalDetails); ?> BD</p>
+            <p>Start Date: <?php echo $startDate; ?></p>
+            <p>End Date: <?php echo $endDate; ?></p>
+            <p>Duration: <?php echo $duration; ?> days</p>
+            <p>Number of Audience: <?php echo $numberOfAudience; ?></p>
+            <p>Time: <?php echo $timingSlotStart->format('h:i A') . ' - ' . $timingSlotEnd->format('h:i A'); ?></p>
+            <p>Rental Details: <?php echo $rentalDetails; ?> BD</p>
         </div>
 
         <div class="form-buttons">
             <form method="post" action="update_page.php">
-                <input type="hidden" name="hallId" value="<?php echo htmlspecialchars($hallId); ?>">
-                <input type="hidden" name="hallName" value="<?php echo htmlspecialchars($hallName); ?>">
-                <input type="hidden" name="start_date" value="<?php echo htmlspecialchars($startDate); ?>">
-                <input type="hidden" name="duration" value="<?php echo htmlspecialchars($duration); ?>">
-                <input type="hidden" name="end_date" value="<?php echo htmlspecialchars($endDate); ?>">
-                <input type="hidden" name="audience" value="<?php echo htmlspecialchars($audience); ?>">
-                <input type="hidden" name="time" value="<?php echo htmlspecialchars($time); ?>">
-                <input type="hidden" name="hallImage" value="<?php echo htmlspecialchars($hallImage); ?>">
-                <input type="hidden" name="rentalDetails" value="<?php echo htmlspecialchars($rentalDetails); ?>">
+                <input type="hidden" name="hallId" value="<?php echo $hallId; ?>">
+                <input type="hidden" name="hallName" value="<?php echo $hallName; ?>">
+                <input type="hidden" name="start_date" value="<?php echo $startDate; ?>">
+                <input type="hidden" name="duration" value="<?php echo $duration; ?>">
+                <input type="hidden" name="end_date" value="<?php echo $endDate; ?>">
+                <input type="hidden" name="audience" value="<?php echo $numberOfAudience; ?>">
+                <input type="hidden" name="time" value="<?php echo $time; ?>">
+                <input type="hidden" name="hallImage" value="<?php echo $hallImage; ?>">
+                <input type="hidden" name="rentalDetails" value="<?php echo $rentalDetails; ?>">
                 <input type="submit" value="Update Details">
             </form>
             <form method="post" action="select_services.php">
-                <input type="hidden" name="hallId" value="<?php echo htmlspecialchars($hallId); ?>">
-                <input type="hidden" name="hallName" value="<?php echo htmlspecialchars($hallName); ?>">
-                <input type="hidden" name="start_date" value="<?php echo htmlspecialchars($startDate); ?>">
-                <input type="hidden" name="duration" value="<?php echo htmlspecialchars($duration); ?>">
-                <input type="hidden" name="end_date" value="<?php echo htmlspecialchars($endDate); ?>">
-                <input type="hidden" name="audience" value="<?php echo htmlspecialchars($audience); ?>">
-                <input type="hidden" name="time" value="<?php echo htmlspecialchars($time); ?>">
-                <input type="hidden" name="hallImage" value="<?php echo htmlspecialchars($hallImage); ?>">
-                <input type="hidden" name="rentalDetails" value="<?php echo htmlspecialchars($rentalDetails); ?>">
+                <input type="hidden" name="hallId" value="<?php echo $hallId; ?>">
+                <input type="hidden" name="hallName" value="<?php echo $hallName; ?>">
+                <input type="hidden" name="start_date" value="<?php echo $startDate; ?>">
+                <input type="hidden" name="duration" value="<?php echo $duration; ?>">
+                <input type="hidden" name="end_date" value="<?php echo $endDate; ?>">
+                <input type="hidden" name="audience" value="<?php echo $numberOfAudience; ?>">
+                <input type="hidden" name="time" value="<?php echo $time; ?>">
+                <input type="hidden" name="hallImage" value="<?php echo $hallImage; ?>">
+                <input type="hidden" name="rentalDetails" value="<?php echo $rentalDetails; ?>">
                 <input type="submit" value="Proceed">
             </form>
-
-
-            <input type="button" value="Cancel" onclick="window.location.href='index.php';">
+            <input type="button" value="Cancel" onclick="window.location.href='searchAndBooking.php';">
         </div>
     </div>
 
