@@ -83,6 +83,7 @@
             var duration = <?php echo isset($_POST['duration']) ? (int)$_POST['duration'] : 1; ?>;
             var startTime = '<?php echo isset($_POST['start_time']) ? $_POST['start_time'] : '12:00 PM'; ?>';
             var endTime = '<?php echo isset($_POST['end_time']) ? $_POST['end_time'] : '05:00 PM'; ?>';
+            var rentalCharge = <?php echo isset($_POST['rentalDetails']) ? (int)$_POST['rentalDetails'] : 0; ?>;
 
             // Convert time to 24-hour format
             function convertTo24HourFormat(time) {
@@ -98,6 +99,10 @@
             var endTime24 = convertTo24HourFormat(endTime);
             var hours = endTime24 - startTime24;
 
+            // Initialize total price with rental charge
+            var initialTotalPrice = rentalCharge;
+            $("#total-price").text("Total Price: " + initialTotalPrice + " BD");
+
             // Calculate total price function
             function calculateTotalPrice() {
                 var totalCatering = 0;
@@ -108,7 +113,7 @@
                 $(".service-option input[type=checkbox]:checked").each(function(){
                     totalServices += parseFloat($(this).data("price")) * hours * duration;
                 });
-                var totalPrice = totalCatering + totalServices;
+                var totalPrice = totalCatering + totalServices + rentalCharge;
                 $("#total-price").text("Total Price: " + totalPrice + " BD");
             }
 
@@ -227,7 +232,7 @@
             <p>Total Price: 0 BD</p>
         </div>
         <div class="form-buttons">
-            <form method="post" action="confirm_booking.php">
+            <form method="post" action="confirm_reservation.php">
                 <input type="hidden" name="hallId" value="<?php echo htmlspecialchars($hallId); ?>">
                 <input type="hidden" name="hallName" value="<?php echo htmlspecialchars($hallName); ?>">
                 <input type="hidden" name="start_date" value="<?php echo htmlspecialchars($startDate); ?>">
@@ -237,10 +242,16 @@
                 <input type="hidden" name="time" value="<?php echo htmlspecialchars($time); ?>">
                 <input type="hidden" name="hallImage" value="<?php echo htmlspecialchars($hallImage); ?>">
                 <input type="hidden" name="rentalDetails" value="<?php echo htmlspecialchars($rentalDetails); ?>">
+                <input type="hidden" id="totalPriceInput" name="totalPrice" value="<?php echo htmlspecialchars($rentalCharge); ?>">
                 <input type="submit" value="Proceed">
+            </form>
+            <form method="post" action="confirm_reservation.php">
+                <input type="hidden" name="totalPrice" value="<?php echo htmlspecialchars($rentalCharge); ?>">
+                <input type="submit" value="Skip">
             </form>
             <input type="button" value="Cancel" onclick="window.location.href='main_page.php';">
         </div>
+              
     </div>
 
     <footer>
