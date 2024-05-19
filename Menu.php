@@ -88,15 +88,25 @@ class Menu {
     }
 
   public function initWithmenuId($menuId) {
-    $db = Database::getInstance();
-    $query = "SELECT * FROM dbProj_Menu WHERE menuId = $menuId";
-    echo 'Executing query: ' . $query . '<br>'; // Debugging line
-    $data = $db->singleFetch($query);
-    if ($data) {
-        $this->initWith($data->menuId, $data->menuName, $data->menuList, $data->price);
-    } else {
-        echo 'Error fetching menu: ' . mysqli_error($db->dblink); // Debugging line
-    }
+  $db = Database::getInstance();
+        $query = "SELECT * FROM dbProj_Menu WHERE menuId = ?";
+        $stmt = $db->prepare($query);
+        if ($stmt === false) {
+            echo 'Prepare failed: ' . mysqli_error($db->getConnection());
+            return false;
+        }
+        $stmt->bind_param('i', $menuId);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $data = $result->fetch_object();
+        $stmt->close();
+
+        if ($data) {
+            $this->initWith($data->menuId, $data->menuName, $data->menuList, $data->price);
+            return true;
+        } else {
+            return false;
+        }
 }
 
 private function initWith($menuId, $menuName, $menuList, $price) {

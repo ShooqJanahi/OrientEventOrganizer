@@ -1,12 +1,12 @@
 <?php
 
-$page_title = 'Delete Menu';
+$page_title = 'Delete Hall';
 include 'header.html';
 
-echo '<h1>Delete Menu</h1>';
+echo '<h1>Delete Hall</h1>';
 
 include "debugging.php";
-require_once 'Menu.php';
+require_once 'Hall.php';
 require_once 'Database.php';
 
 $id = 0;
@@ -23,10 +23,10 @@ if (isset($_GET['id'])) {
     exit();
 }
 
-$menu = new Menu();
-if (!$menu->initWithMenuId($id)) {
-    // If the menu is not found, display an error message and exit
-    echo '<p class="error">Menu not found.</p>';
+$hall = new Hall();
+if (!$hall->initWithHallId($id)) {
+    // If the hall is not found, display an error message and exit
+    echo '<p class="error">Hall not found.</p>';
     include 'footer.html';
     exit();
 }
@@ -34,18 +34,30 @@ if (!$menu->initWithMenuId($id)) {
 $db = Database::getInstance();
 
 if (isset($_POST['submitted']) && $_POST['submitted'] === 'TRUE') {
-    // Delete the menu
-    $query = "DELETE FROM dbProj_Menu WHERE menuId = ?";
+    // Delete associated timing slots
+    $query = "DELETE FROM dpProj_HallsTimingSlots WHERE hallId = ?";
+    $stmt = $db->prepare($query);
+    if ($stmt) {
+        $stmt->bind_param('i', $id);
+        $stmt->execute();
+        $stmt->close();
+    } else {
+        // Display an error message if the statement preparation fails
+        echo '<p class="error">Error preparing statement for deleting timing slots: ' . $db->dblink->error . '</p>';
+    }
+
+    // Delete the hall
+    $query = "DELETE FROM dbProj_Hall WHERE hallId = ?";
     $stmt = $db->prepare($query);
     if ($stmt) {
         $stmt->bind_param('i', $id);
         $stmt->execute();
         $stmt->close();
         // Display a success message after successful deletion
-        echo '<p>Menu deleted successfully.</p>';
+        echo '<p>Hall and associated timing slots deleted successfully.</p>';
     } else {
         // Display an error message if the statement preparation fails
-        echo '<p class="error">Error preparing statement for deleting menu: ' . $db->getConnection()->error . '</p>';
+        echo '<p class="error">Error preparing statement for deleting hall: ' . $db->dblink->error . '</p>';
     }
     include 'footer.html';
     exit();
@@ -108,17 +120,17 @@ if (isset($_POST['submitted']) && $_POST['submitted'] === 'TRUE') {
     }
 </style>
 <div class="form-container">
-    <form action="delete_menu.php" method="post">
+    <form action="delete_hall.php" method="post">
         <!-- Confirmation message -->
-        <h3>Are you sure you want to delete the menu: <?php echo $menu->getMenuName(); ?>?</h3>
+        <h3>Are you sure you want to delete the hall: <?php echo $hall->getHallName(); ?>?</h3>
         <p>This action cannot be undone.</p>
-        <!-- Hidden fields to pass the form submission status and menu ID -->
+        <!-- Hidden fields to pass the form submission status and hall ID -->
         <input type="hidden" name="submitted" value="TRUE">
         <input type="hidden" name="id" value="<?php echo $id; ?>">
         <!-- Submit button for deletion -->
-        <input type="submit" class="fancy-button" value="Yes, Delete Menu">
-        <!-- Cancel button to redirect back to the view menus page -->
-        <a href="view_menus.php" class="cancel-button">Cancel</a>
+        <input type="submit" class="fancy-button" value="Yes, Delete Hall">
+        <!-- Cancel button to redirect back to the view halls page -->
+        <a href="view_halls.php" class="cancel-button">Cancel</a>
     </form>
 </div>
 

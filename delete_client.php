@@ -1,12 +1,12 @@
 <?php
 
-$page_title = 'Delete Menu';
+$page_title = 'Delete Client';
 include 'header.html';
 
-echo '<h1>Delete Menu</h1>';
+echo '<h1>Delete Client</h1>';
 
 include "debugging.php";
-require_once 'Menu.php';
+require_once 'Client.php';
 require_once 'Database.php';
 
 $id = 0;
@@ -23,10 +23,14 @@ if (isset($_GET['id'])) {
     exit();
 }
 
-$menu = new Menu();
-if (!$menu->initWithMenuId($id)) {
-    // If the menu is not found, display an error message and exit
-    echo '<p class="error">Menu not found.</p>';
+$client = new Client();
+$user = null;
+if ($client->initWithClientId($id)) {
+    // If the client is found, get the associated user
+    $user = $client->getUserId();
+} else {
+    // If the client is not found, display an error message and exit
+    echo '<p class="error">Client not found.</p>';
     include 'footer.html';
     exit();
 }
@@ -34,19 +38,32 @@ if (!$menu->initWithMenuId($id)) {
 $db = Database::getInstance();
 
 if (isset($_POST['submitted']) && $_POST['submitted'] === 'TRUE') {
-    // Delete the menu
-    $query = "DELETE FROM dbProj_Menu WHERE menuId = ?";
+    // Delete the client
+    $query = "DELETE FROM dbProj_Client WHERE clientId = ?";
     $stmt = $db->prepare($query);
     if ($stmt) {
         $stmt->bind_param('i', $id);
         $stmt->execute();
         $stmt->close();
-        // Display a success message after successful deletion
-        echo '<p>Menu deleted successfully.</p>';
+        echo '<p>Client deleted successfully.</p>';
     } else {
-        // Display an error message if the statement preparation fails
-        echo '<p class="error">Error preparing statement for deleting menu: ' . $db->getConnection()->error . '</p>';
+        echo '<p class="error">Error preparing statement for deleting client: ' . $db->getConnection()->error . '</p>';
     }
+
+    // Delete the associated user
+    if ($user !== null) {
+        $query = "DELETE FROM dbProj_User WHERE userId = ?";
+        $stmt = $db->prepare($query);
+        if ($stmt) {
+            $stmt->bind_param('i', $user);
+            $stmt->execute();
+            $stmt->close();
+            echo '<p>User associated with the client deleted successfully.</p>';
+        } else {
+            echo '<p class="error">Error preparing statement for deleting user: ' . $db->getConnection()->error . '</p>';
+        }
+    }
+
     include 'footer.html';
     exit();
 }
@@ -108,17 +125,17 @@ if (isset($_POST['submitted']) && $_POST['submitted'] === 'TRUE') {
     }
 </style>
 <div class="form-container">
-    <form action="delete_menu.php" method="post">
+    <form action="delete_client.php" method="post">
         <!-- Confirmation message -->
-        <h3>Are you sure you want to delete the menu: <?php echo $menu->getMenuName(); ?>?</h3>
+        <h3>Are you sure you want to delete the client: <?php echo $client->getClientId(); ?>?</h3>
         <p>This action cannot be undone.</p>
-        <!-- Hidden fields to pass the form submission status and menu ID -->
+        <!-- Hidden fields to pass the form submission status and client ID -->
         <input type="hidden" name="submitted" value="TRUE">
         <input type="hidden" name="id" value="<?php echo $id; ?>">
         <!-- Submit button for deletion -->
-        <input type="submit" class="fancy-button" value="Yes, Delete Menu">
-        <!-- Cancel button to redirect back to the view menus page -->
-        <a href="view_menus.php" class="cancel-button">Cancel</a>
+        <input type="submit" class="fancy-button" value="Yes, Delete Client">
+        <!-- Cancel button to redirect back to the view clients page -->
+        <a href="view_clients.php" class="cancel-button">Cancel</a>
     </form>
 </div>
 
