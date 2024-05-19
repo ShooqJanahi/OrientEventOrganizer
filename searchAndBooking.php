@@ -38,18 +38,40 @@ if (!empty($numberOfAudience)) {
 if (!empty($searchTerm)) {
     $sql .= " AND MATCH(h.hallName, h.description) AGAINST ('$searchTerm' IN NATURAL LANGUAGE MODE)";
 }
+
+$alternativeTimeSlots = [];
 if (!empty($selectDate) && !empty($duration)) {
     $sql .= " AND NOT EXISTS (
               SELECT 1
               FROM dbProj_Reservation r
               WHERE r.hallId = h.hallId
-                AND r.timingID = t.timingID
                 AND r.startDate <= DATE_ADD('$selectDate', INTERVAL $duration DAY)
                 AND r.endDate >= '$selectDate'
           )";
-}
-if (!empty($time24)) {
-    $sql .= " AND '$time24' BETWEEN t.timingSlotStart AND t.timingSlotEnd";
+
+    if (!empty($time24)) {
+        $sql .= " AND '$time24' BETWEEN t.timingSlotStart AND t.timingSlotEnd";
+
+        // Check if the chosen time is available
+        $availabilityCheckSql = "SELECT 1 FROM dbProj_Reservation r
+                                 WHERE r.hallId = h.hallId
+                                   AND r.startDate <= DATE_ADD('$selectDate', INTERVAL $duration DAY)
+                                   AND r.endDate >= '$selectDate'
+                                   AND ('$time24' BETWEEN t.timingSlotStart AND t.timingSlotEnd)";
+        $result = $db->multiFetch($availabilityCheckSql);
+        if (empty($result)) {
+            // Fetch alternative time slots if the chosen time is not available
+            $alternativeTimeSlotsSql = "SELECT t.timingSlotStart, t.timingSlotEnd FROM dpProj_HallsTimingSlots t
+                                        WHERE t.hallId = h.hallId
+                                          AND NOT EXISTS (
+                                              SELECT 1 FROM dbProj_Reservation r
+                                              WHERE r.hallId = t.hallId
+                                                AND r.startDate <= DATE_ADD('$selectDate', INTERVAL $duration DAY)
+                                                AND r.endDate >= '$selectDate'
+                                          )";
+            $alternativeTimeSlots = $db->multiFetch($alternativeTimeSlotsSql);
+        }
+    }
 }
 
 $halls = $db->multiFetch($sql);
@@ -255,6 +277,27 @@ function convertTo12HourFormat($time) {
                     <?php endif; ?>
                 </tbody>
             </table>
+            
+            <?php if (!empty($alternativeTimeSlots)): ?>
+                <h2>Recommended Alternative Time Slots:</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Hall Name</th>
+                            <th>Alternative Time Slot</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($alternativeTimeSlots as $slot): ?>
+                            <tr>
+                                <td><?php echo htmlspecialchars($hall->hallName); ?></td>
+                                <td><?php echo convertTo12HourFormat($slot['timingSlotStart']) . ' - ' . convertTo12HourFormat($slot['timingSlotEnd']); ?></td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            <?php endif; ?>
+
         </div>
     </div>
 
