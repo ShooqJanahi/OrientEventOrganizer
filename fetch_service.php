@@ -1,4 +1,3 @@
-// fetch_service.php
 <?php
 // Include the Database class
 include 'Database.php';
