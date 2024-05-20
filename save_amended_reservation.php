@@ -1,4 +1,3 @@
-<!-- Shooq -->
 <?php
 // save_amended_reservation.php
 session_start();

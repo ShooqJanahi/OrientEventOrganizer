@@ -1,4 +1,3 @@
-<!-- Shooq -->
 <?php
 // checkout.php
 session_start();
