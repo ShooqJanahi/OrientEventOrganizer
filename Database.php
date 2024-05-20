@@ -1,11 +1,13 @@
 <?php
+
 class Database {
+
     public static $instance = null;
     public $dblink = null;
 
     public static function getInstance() {
         if (is_null(self::$instance)) {
-            self::$instance = new Database();
+            self::$instance = new Database ( );
         }
         return self::$instance;
     }
@@ -15,86 +17,75 @@ class Database {
             $this->connect();
         }
     }
-     public function getConnection() {
-        return $this->dblink;
-    }
 
     function connect() {
-        $this->dblink = new mysqli('localhost', 'u202101977', 'u202101977', 'db202101977');
-        if ($this->dblink->connect_error) {
-            die('CAN NOT CONNECT: ' . $this->dblink->connect_error);
-        } else {
-            echo 'Connected successfully to the database.<br>'; // Debugging line
-        }
+        $this->dblink = mysqli_connect('localhost', 'u202000210', 'u202000210', 'db202000210') or die('CAN NOT CONNECT');
     }
 
     function __destruct() {
         if (!is_null($this->dblink)) {
-            $this->close();
+            $this->close($this->dblink);
         }
     }
 
     function close() {
-        $this->dblink->close();
+        mysqli_close($this->dblink);
     }
-    
-    
 
-    function querySQL($sql, $params = []) {
-        if ($sql != null && $sql != '') {
-            $stmt = $this->dblink->prepare($sql);
-            if ($params) {
-                $types = str_repeat('s', count($params));
-                $stmt->bind_param($types, ...$params);
-            }
-            $stmt->execute();
-            return $stmt;
+    function querySQL($sql) {
+        if ($sql != null || $sql != '') {
+            $sql = $this->mkSafe($sql);
+            mysqli_query($this->dblink, $sql);
         }
-        return null;
     }
 
-    function singleFetch($sql, $params = []) {
+    function singleFetch($sql) {
+        $sql = $this->mkSafe($sql);
         $fet = null;
-        if ($sql != null && $sql != '') {
-            $stmt = $this->querySQL($sql, $params);
-            $result = $stmt->get_result();
-            $fet = $result->fetch_object();
+        if ($sql != null || $sql != '') {
+            $res = mysqli_query($this->dblink, $sql);
+            $fet = mysqli_fetch_object($res);
         }
         return $fet;
     }
 
-    function multiFetch($sql, $params = []) {
-        $result = [];
-        if ($sql != null && $sql != '') {
-            $stmt = $this->querySQL($sql, $params);
-            $res = $stmt->get_result();
-            while ($fet = $res->fetch_object()) {
-                $result[] = $fet;
+    function multiFetch($sql) {
+        $sql = $this->mkSafe($sql);
+        $result = null;
+        $counter = 0;
+        if ($sql != null || $sql != '') {
+            $res = mysqli_query($this->dblink, $sql);
+            while ($fet = mysqli_fetch_object($res)) {
+                $result[$counter] = $fet;
+                $counter++;
             }
-            echo 'Fetched ' . count($result) . ' rows.<br>'; // Debugging line
         }
         return $result;
     }
 
     function mkSafe($string) {
-        return $this->dblink->real_escape_string($string);
+        /* $string = strip_tags($string);
+          if (!get_magic_quotes_gpc()) {
+          $string = addslashes($string);
+          } else {
+          $string = stripslashes($string);
+          }
+          $string = str_ireplace("script", "blocked", $string);
+          $string = addcslashes($escaped, '%_');
+
+          $string = trim($string);*/
+          //$newString = mysqli_escape_string($this->dblink, $string); 
+
+        return $string;
     }
 
-    function getRows($sql, $params = []) {
+    function getRows($sql) {
         $rows = 0;
-        if ($sql != null && $sql != '') {
-            $stmt = $this->querySQL($sql, $params);
-            $res = $stmt->get_result();
-            $rows = $res->num_rows;
+        if ($sql != null || $sql != '') {
+            $result = mysqli_query($this->dblink, $sql);
+            $rows = mysqli_num_rows($result);
         }
         return $rows;
     }
 
-    public function getLastInsertId() {
-        return $this->dblink->insert_id;
-    } 
-  public function prepare($query) {
-        return $this->dblink->prepare($query);
-    }
 }
-?>

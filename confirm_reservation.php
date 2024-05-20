@@ -1,6 +1,6 @@
-<!-- Shooq -->
-
 <?php
+
+
 // confirm_reservation.php
 session_start();
 
@@ -38,18 +38,18 @@ $discounted_cost = calculate_discount($client_status, $total_cost);
 <body>
     <div class="container mt-5">
         <h1 class="mb-4">Enter Personal/Business Details</h1>
-        <form action="payment.php" method="post">
+        <form action="checkout.php" method="post">
             <div class="form-group">
                 <label for="name">Name:</label>
-                <input type="text" id="name" name="name" class="form-control" required value="<?= $logged_in_user ? htmlspecialchars($logged_in_user['name']) : '' ?>">
+                <input type="text" id="name" name="name" class="form-control" required value="<?= $logged_in_user ? $logged_in_user['name'] : '' ?>">
             </div>
             <div class="form-group">
                 <label for="email">Email:</label>
-                <input type="email" id="email" name="email" class="form-control" required value="<?= $logged_in_user ? htmlspecialchars($logged_in_user['email']) : '' ?>">
+                <input type="email" id="email" name="email" class="form-control" required value="<?= $logged_in_user ? $logged_in_user['email'] : '' ?>">
             </div>
             <div class="form-group">
                 <label for="company">Company Name:</label>
-                <input type="text" id="company" name="company" class="form-control" value="<?= $logged_in_user ? htmlspecialchars($logged_in_user['company']) : '' ?>">
+                <input type="text" id="company" name="company" class="form-control" value="<?= $logged_in_user ? $logged_in_user['company'] : '' ?>">
             </div>
             <div class="form-group">
                 <label for="total_cost">Total Cost (Discount Applied):</label>

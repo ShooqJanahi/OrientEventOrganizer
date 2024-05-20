@@ -1,4 +1,3 @@
-<!-- Shooq -->
 <?php
 // amend_reservation.php
 session_start();
@@ -11,7 +10,7 @@ if (!$reservation_code) {
 }
 
 // Fetch reservation data from the database
-$stmt = $pdo->prepare("SELECT * FROM dbProj_Reservation WHERE reservation_code = :code");
+$stmt = $pdo->prepare("SELECT * FROM reservations WHERE reservation_code = :code");
 $stmt->execute(['code' => $reservation_code]);
 $reservation = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -20,7 +19,7 @@ if (!$reservation) {
 }
 
 // Calculate any changes with the amendment fee
-$original_cost = $reservation['totalCost'];
+$original_cost = $reservation['total_cost'];
 $amendment_fee = $original_cost * 0.05;
 $total_cost = $original_cost + $amendment_fee;
 
