@@ -24,7 +24,7 @@ class Database {
         if ($this->dblink->connect_error) {
             die('CAN NOT CONNECT: ' . $this->dblink->connect_error);
         } else {
-            echo 'Connected successfully to the database.<br>'; // Debugging line
+            //echo 'Connected successfully to the database.<br>'; // Debugging line
         }
     }
 
@@ -71,7 +71,7 @@ class Database {
             while ($fet = $res->fetch_object()) {
                 $result[] = $fet;
             }
-            echo 'Fetched ' . count($result) . ' rows.<br>'; // Debugging line
+           // echo 'Fetched ' . count($result) . ' rows.<br>'; // Debugging line
         }
         return $result;
     }
