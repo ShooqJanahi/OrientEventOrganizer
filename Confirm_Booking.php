@@ -170,7 +170,6 @@
                 <input type="submit" value="Proceed">
             </form>
 
-
             <input type="button" value="Cancel" onclick="window.location.href='index.php';">
         </div>
     </div>
