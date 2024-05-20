@@ -126,8 +126,7 @@ include 'Database.php';
         }
         return true;
     }
-    //'INSERT INTO dbProj_User  (username, userType, firstName, lastName, password, email, phoneNumber)
-    // VALUES ( \'' .$this->username. '\',\'' .$this->userType. '\',\'' .$this->firstName. '\',\'' .$this->lastName. '\',\'' .$this->password. '\',\'' .$this->email. '\',\'' .$this->phoneNumber. '\')'
+    
     public function registerUser() {
          if ($this->isValid()) {
             try {

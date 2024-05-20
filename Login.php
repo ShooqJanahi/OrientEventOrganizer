@@ -15,7 +15,6 @@ class Login extends Users {
 
         if (!$this->check_session())
             $this->check_cookie();
-        session_start();
 
         return $this->ok;
     }

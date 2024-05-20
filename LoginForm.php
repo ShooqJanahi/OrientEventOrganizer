@@ -1,6 +1,8 @@
 <?php
-// Check if the login form is submitted
+include 'header.html';
+session_start();
 
+// Check if the login form is submitted
 if (isset($_POST['submitted'])) {
     include 'Login.php';
     $lgnObj = new Login(); // Create a new instance of the Login class
@@ -12,6 +14,7 @@ if (isset($_POST['submitted'])) {
     if (!empty($username) && !empty($password)) {
         if ($lgnObj->login($username, $password)) {
             header('location: index.php');
+            exit();
         } else {
             echo 'Wrong Login Values';
         }
@@ -79,4 +82,6 @@ if (isset($_POST['submitted'])) {
 
 <!-- Login form end -->
 
-
+<?php 
+include 'footer.html';
+?>
