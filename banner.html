@@ -55,9 +55,11 @@ Click nbfs://nbhost/SystemFileSystem/Templates/ClientSide/html.html to edit this
                      <li class="nav-item">
                         <a class="nav-link" href="searchAndBooking.php">Booking</a>
                      </li>
-                     <li class="nav-item">
-                        <a class="nav-link" href="contact.php">Contact</a>
-                     </li>
+                     <?php if (!empty($_SESSION['userId']) && $_SESSION['userType'] === 'A'): ?>
+                        <li class="nav-item">
+                            <a class="nav-link" href="contact.php">Contact</a>
+                        </li>
+                    <?php endif; ?>
                   </ul>
                   <form class="form-inline my-2 my-lg-0">
                      <div class="login_bt">

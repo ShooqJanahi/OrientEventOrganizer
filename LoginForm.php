@@ -1,5 +1,4 @@
 <?php
-include 'header.html';
 session_start();
 
 // Check if the login form is submitted
@@ -32,26 +31,35 @@ if (isset($_POST['submitted'])) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login</title>
     <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link href="css/style.css" rel="stylesheet"> <!-- Include your custom styles -->
     <style>
-        .form-group {
+        .custom-login-form .form-group {
             margin-bottom: 1rem;
         }
-        .form-group label {
+        .custom-login-form .form-group label {
             margin-bottom: 0;
             display: inline-block;
             width: 120px; /* Adjust the width as needed */
         }
-        .container {
-            margin-top: 50px;
+        .custom-login-form .container {
+            margin-top: 150px; /* Adjust the margin-top to increase space */
         }
-        .card {
+        .custom-login-form .card {
             width: 60%;
             padding: 20px;
+        }
+        /* Ensure links are blue */
+        .custom-login-form a {
+            color: blue;
+        }
+        .custom-login-form a:hover {
+            color: darkblue;
         }
     </style>
 </head>
 <body>
-    <div class="container d-flex justify-content-center">
+    <?php include 'header.html'; ?>
+    <div class="container custom-login-form d-flex justify-content-center">
         <div class="card">
             <div class="card-body">
                 <h1 class="card-title text-center">Login</h1>
@@ -78,7 +86,6 @@ if (isset($_POST['submitted'])) {
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </body>
 </html>
-
 
 <!-- Login form end -->
 
