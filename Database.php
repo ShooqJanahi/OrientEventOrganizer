@@ -78,10 +78,6 @@ class Database {
 
         return $string;
     }
-    
-    function prepare($query) {
-        return mysqli_prepare($this->dblink, $query);
-    }
 
     function getRows($sql) {
         $rows = 0;

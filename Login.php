@@ -44,10 +44,8 @@ class Login extends Users {
             $this->ok = true;
             $_SESSION['userId'] = $this->getUserId();
             $_SESSION['username'] = $this->getUsername();
-            $_SESSION['userType'] = $this->getUserType();
             setcookie('userId', $_SESSION['userId'], time() + 60 * 60 * 24 * 7, '/', $this->domain);
             setcookie('username', $_SESSION['username'], time() + 60 * 60 * 24 * 7, '/', $this->domain);
-            setcookie('userType', $_SESSION['userType'], time() + 60 * 60 * 24 * 7, '/', $this->domain);
 
             return true;
         }
@@ -68,10 +66,8 @@ class Login extends Users {
 
                 $_SESSION['userId'] = $this->getUserId();
                 $_SESSION['username'] = $this->getUsername();
-                $_SESSION['userType'] = $this->getUserType();
                 setcookie('userId', $_SESSION['userId'], time() + 60 * 60 * 24 * 7, '/', $this->domain);
                 setcookie('username', $_SESSION['username'], time() + 60 * 60 * 24 * 7, '/', $this->domain);
-                setcookie('userType', $_SESSION['userType'], time() + 60 * 60 * 24 * 7, '/', $this->domain);
 
                 return true;
             } else {
@@ -90,10 +86,8 @@ class Login extends Users {
         $this->ok = false;
         $_SESSION['userId'] = '';
         $_SESSION['username'] = '';
-        $_SESSION['userType'] = '';
         setcookie('userId', '', time() - 3600, '/', $this->domain);
         setcookie('username', '', time() - 3600, '/', $this->domain);
-        setcookie('userType', '', time() - 3600, '/', $this->domain);
         session_destroy();
     }
 }

@@ -1,4 +1,5 @@
 <?php
+include 'header.html';
 include 'Users.php';
 
 if (isset($_POST['submitted'])) {
@@ -34,23 +35,20 @@ if (isset($_POST['submitted'])) {
     <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
     <style>
         .form-group {
-            margin-bottom: 1rem;
             display: flex;
             align-items: center;
+            margin-bottom: 1rem;
         }
         .form-group label {
-            width: 150px;
-            margin-bottom: 0;
-            margin-right: 1rem;
-        }
-        .form-group input,
-        .form-group .text-danger {
-            flex: 1;
             width: 100%;
-            margin-right: 1rem;
+            margin-bottom: 0;
         }
-        .form-control {
-            margin-bottom: 10px;
+        .form-group input {
+            width: 100%;
+            margin-right: 10px;
+        }
+        .form-group .text-danger {
+            width: 100%;
         }
         .container {
             margin-top: 50px;
@@ -58,12 +56,6 @@ if (isset($_POST['submitted'])) {
         .card {
             width: 100%;
             padding: 10px;
-        }
-        .custom-link {
-            color: blue;
-        }
-        .custom-link:hover {
-            color: darkblue;
         }
     </style>
     <script>
@@ -84,16 +76,6 @@ if (isset($_POST['submitted'])) {
                         document.getElementById(errField).innerHTML = '';
                         valid = true;
                     }
-                } else if (obj.id === 'phone') {
-                    if (value.length !== 8) {
-                        document.getElementById(errField).innerHTML = 'Phone number must be 8 digits long';
-                    } 
-                    else if (!/^\d+$/.test(value)) {
-                        document.getElementById(errField).innerHTML = 'Phone number must be numbers';
-                    } else {
-                        document.getElementById(errField).innerHTML = '';
-                        valid = true;
-                    }
                 } else {
                     document.getElementById(errField).innerHTML = '';
                     valid = true;
@@ -104,8 +86,7 @@ if (isset($_POST['submitted'])) {
     </script>
 </head>
 <body>
-    <?php include 'header.html'; ?>
-    <div class="container">
+    <div class="container d-flex justify-content-center">
         <div class="card">
             <div class="card-body">
                 <h1 class="card-title text-center">User Registration</h1>
@@ -142,7 +123,7 @@ if (isset($_POST['submitted'])) {
                     </div>
                     <div class="text-center">
                         <button type="submit" class="btn btn-primary">Register</button>
-                        <p class="mt-3">Already have an account? <a href="LoginForm.php" class="custom-link">Login here</a>.</p>
+                        <p class="mt-3">Already have an account? <a href="LoginForm.php">Login here</a>.</p>
                     </div>
                     <input type="hidden" name="submitted" value="1">
                 </form>
@@ -154,6 +135,9 @@ if (isset($_POST['submitted'])) {
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </body>
 </html>
+
+
+
 
 
 <?php
