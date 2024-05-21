@@ -115,6 +115,7 @@
                 });
                 var totalPrice = totalCatering + totalServices + rentalCharge;
                 $("#total-price").text("Total Price: " + totalPrice + " BD");
+                $("#totalPriceInput").val(totalPrice); // Update hidden input value
             }
 
             // Fetch and display menu details
@@ -159,9 +160,38 @@
                 }
             });
 
+            // Add hidden inputs for selected options
+            function addHiddenInputs() {
+                // Clear previous inputs
+                $("#menu-selections").empty();
+                $("#service-selections").empty();
+
+                // Add selected menu options as hidden inputs
+                $(".menu-option input[type=checkbox]:checked").each(function(){
+                    var menuId = $(this).data("menu-id");
+                    var price = $(this).data("price");
+                    $("#menu-selections").append('<input type="hidden" name="selectedMenus[]" value="' + menuId + '">');
+                    $("#menu-selections").append('<input type="hidden" name="menuPrices[]" value="' + price + '">');
+                });
+
+                // Add selected service options as hidden inputs
+                $(".service-option input[type=checkbox]:checked").each(function(){
+                    var serviceId = $(this).data("service-id");
+                    var price = $(this).data("price");
+                    $("#service-selections").append('<input type="hidden" name="selectedServices[]" value="' + serviceId + '">');
+                    $("#service-selections").append('<input type="hidden" name="servicePrices[]" value="' + price + '">');
+                });
+            }
+
             // Calculate total price on checkbox change
             $(".menu-option input[type=checkbox], .service-option input[type=checkbox]").change(function(){
                 calculateTotalPrice();
+                addHiddenInputs();
+            });
+
+            // Add hidden inputs on form submit
+            $("#confirm-form").submit(function() {
+                addHiddenInputs();
             });
         });
     </script>
@@ -232,26 +262,36 @@
             <p>Total Price: 0 BD</p>
         </div>
         <div class="form-buttons">
-            <form method="post" action="confirm_reservation.php">
-                <input type="hidden" name="hallId" value="<?php echo htmlspecialchars($hallId); ?>">
-                <input type="hidden" name="hallName" value="<?php echo htmlspecialchars($hallName); ?>">
-                <input type="hidden" name="start_date" value="<?php echo htmlspecialchars($startDate); ?>">
-                <input type="hidden" name="duration" value="<?php echo htmlspecialchars($duration); ?>">
-                <input type="hidden" name="end_date" value="<?php echo htmlspecialchars($endDate); ?>">
-                <input type="hidden" name="audience" value="<?php echo htmlspecialchars($audience); ?>">
-                <input type="hidden" name="time" value="<?php echo htmlspecialchars($time); ?>">
-                <input type="hidden" name="hallImage" value="<?php echo htmlspecialchars($hallImage); ?>">
-                <input type="hidden" name="rentalDetails" value="<?php echo htmlspecialchars($rentalDetails); ?>">
+            <form method="post" action="confirm_reservation.php" id="confirm-form">
+                <input type="hidden" name="hallId" value="<?php echo htmlspecialchars($_POST['hallId']); ?>">
+                <input type="hidden" name="hallName" value="<?php echo htmlspecialchars($_POST['hallName']); ?>">
+                <input type="hidden" name="start_date" value="<?php echo htmlspecialchars($_POST['start_date']); ?>">
+                <input type="hidden" name="duration" value="<?php echo htmlspecialchars($_POST['duration']); ?>">
+                <input type="hidden" name="end_date" value="<?php echo htmlspecialchars($_POST['end_date']); ?>">
+                <input type="hidden" name="audience" value="<?php echo htmlspecialchars($_POST['audience']); ?>">
+                <input type="hidden" name="time" value="<?php echo htmlspecialchars($_POST['time']); ?>">
+                <input type="hidden" name="hallImage" value="<?php echo htmlspecialchars($_POST['hallImage']); ?>">
+                <input type="hidden" name="rentalDetails" value="<?php echo htmlspecialchars($_POST['rentalDetails']); ?>">
                 <input type="hidden" id="totalPriceInput" name="totalPrice" value="<?php echo htmlspecialchars($rentalCharge); ?>">
+                <div id="menu-selections"></div>
+                <div id="service-selections"></div>
                 <input type="submit" value="Proceed">
             </form>
             <form method="post" action="confirm_reservation.php">
+                <input type="hidden" name="hallId" value="<?php echo htmlspecialchars($_POST['hallId']); ?>">
+                <input type="hidden" name="hallName" value="<?php echo htmlspecialchars($_POST['hallName']); ?>">
+                <input type="hidden" name="start_date" value="<?php echo htmlspecialchars($_POST['start_date']); ?>">
+                <input type="hidden" name="duration" value="<?php echo htmlspecialchars($_POST['duration']); ?>">
+                <input type="hidden" name="end_date" value="<?php echo htmlspecialchars($_POST['end_date']); ?>">
+                <input type="hidden" name="audience" value="<?php echo htmlspecialchars($_POST['audience']); ?>">
+                <input type="hidden" name="time" value="<?php echo htmlspecialchars($_POST['time']); ?>">
+                <input type="hidden" name="hallImage" value="<?php echo htmlspecialchars($_POST['hallImage']); ?>">
+                <input type="hidden" name="rentalDetails" value="<?php echo htmlspecialchars($_POST['rentalDetails']); ?>">
                 <input type="hidden" name="totalPrice" value="<?php echo htmlspecialchars($rentalCharge); ?>">
                 <input type="submit" value="Skip">
             </form>
             <input type="button" value="Cancel" onclick="window.location.href='main_page.php';">
         </div>
-              
     </div>
 
     <footer>

@@ -10,6 +10,19 @@ $duration = isset($_GET['duration']) ? $_GET['duration'] : '';
 $time = isset($_GET['time']) ? $_GET['time'] : '';
 $searchTerm = isset($_GET['searchTerm']) ? $_GET['searchTerm'] : '';
 
+$errors = [];
+
+// Validate number of audience
+if (!empty($numberOfAudience) && $numberOfAudience < 1) {
+    $errors[] = "Number of audience must be at least 1.";
+}
+
+// Validate selected date
+$currentDate = date('Y-m-d');
+if (!empty($selectDate) && $selectDate < $currentDate) {
+    $errors[] = "Selected date cannot be in the past.";
+}
+
 // Convert 12-hour format time to 24-hour format
 function convertTo24HourFormat($time) {
     return date("H:i:s", strtotime($time));
@@ -34,34 +47,37 @@ if (!empty($selectDate) && !empty($duration)) {
     }
 }
 
-$sql = "SELECT h.hallId, h.hallName, h.location, h.capacity, h.description, h.image, h.rentalCharge, t.timingSlotStart, t.timingSlotEnd
-        FROM dbProj_Hall h
-        JOIN dpProj_HallsTimingSlots t ON h.hallId = t.hallId
-        WHERE 1=1";
+// Proceed with the query only if there are no validation errors
+if (empty($errors)) {
+    $sql = "SELECT h.hallId, h.hallName, h.location, h.capacity, h.description, h.image, h.rentalCharge, t.timingSlotStart, t.timingSlotEnd
+            FROM dbProj_Hall h
+            JOIN dpProj_HallsTimingSlots t ON h.hallId = t.hallId
+            WHERE 1=1";
 
-if (!empty($numberOfAudience)) {
-    $sql .= " AND h.capacity >= $numberOfAudience";
-}
+    if (!empty($numberOfAudience)) {
+        $sql .= " AND h.capacity >= $numberOfAudience";
+    }
 
-//Full text index
-if (!empty($searchTerm)) {
-    $sql .= " AND MATCH(h.hallName, h.description) AGAINST ('$searchTerm' IN NATURAL LANGUAGE MODE)";
-}
-if (!empty($selectDate) && !empty($duration)) {
-    $sql .= " AND NOT EXISTS (
-              SELECT 1
-              FROM dbProj_Reservation r
-              WHERE r.hallId = h.hallId
-                AND r.timingID = t.timingID
-                AND r.startDate <= '$endDate'
-                AND r.endDate >= '$selectDate'
-          )";
-}
-if (!empty($time24)) {
-    $sql .= " AND '$time24' BETWEEN t.timingSlotStart AND t.timingSlotEnd";
-}
+    // Full text index
+    if (!empty($searchTerm)) {
+        $sql .= " AND MATCH(h.hallName, h.description) AGAINST ('$searchTerm' IN NATURAL LANGUAGE MODE)";
+    }
+    if (!empty($selectDate) && !empty($duration)) {
+        $sql .= " AND NOT EXISTS (
+                  SELECT 1
+                  FROM dbProj_Reservation r
+                  WHERE r.hallId = h.hallId
+                    AND r.timingID = t.timingID
+                    AND r.startDate <= '$endDate'
+                    AND r.endDate >= '$selectDate'
+              )";
+    }
+    if (!empty($time24)) {
+        $sql .= " AND '$time24' BETWEEN t.timingSlotStart AND t.timingSlotEnd";
+    }
 
-$halls = $db->multiFetch($sql);
+    $halls = $db->multiFetch($sql);
+}
 
 // Convert time to 12-hour format
 function convertTo12HourFormat($time) {
@@ -220,12 +236,21 @@ function convertTo12HourFormat($time) {
                     <label for="searchTerm">Search by Name/Description:</label>
                     <input type="text" id="searchTerm" name="searchTerm" value="<?php echo htmlspecialchars($searchTerm); ?>">
                 </div>
-                <div id="errorMessage" class="error-message"></div>
+                <div id="errorMessage" class="error-message">
+                    <?php
+                    if (!empty($errors)) {
+                        foreach ($errors as $error) {
+                            echo '<p>' . htmlspecialchars($error) . '</p>';
+                        }
+                    }
+                    ?>
+                </div>
                 <div class="form-buttons">
                     <input type="submit" value="Search">
                 </div>
             </form>
 
+            <?php if (empty($errors)): ?>
             <table>
                 <thead>
                     <tr>
@@ -281,6 +306,7 @@ function convertTo12HourFormat($time) {
                     <?php endif; ?>
                 </tbody>
             </table>
+            <?php endif; ?>
         </div>
     </div>
 

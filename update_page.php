@@ -18,10 +18,7 @@ $rentalDetails = isset($_POST['rentalDetails']) ? $_POST['rentalDetails'] : null
 
 // Calculate end date if not provided
 if ($startDate && $duration) {
-    /*$startDateObj = new DateTime($startDate);
-            $startDateObj->add(new DateInterval('P' . $duration . 'D'));
-            $endDate = $startDateObj->format('Y-m-d');*/
-             switch ($duration) {
+    switch ($duration) {
         case '1':
             $endDate = $startDate; // Same day
             break;
@@ -42,6 +39,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_changes'])) {
 
     if (empty($startDate)) {
         $errors['startDate'] = "Start date is required.";
+    } elseif ($startDate < date('Y-m-d')) {
+        $errors['startDate'] = "Selected date cannot be in the past.";
     }
     if (empty($duration)) {
         $errors['duration'] = "Duration is required.";
