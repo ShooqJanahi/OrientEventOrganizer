@@ -1,6 +1,6 @@
 <?php
 session_start();
-
+$error = '';
 // Check if the login form is submitted
 if (isset($_POST['submitted'])) {
     include 'Login.php';
@@ -15,10 +15,10 @@ if (isset($_POST['submitted'])) {
             header('location: index.php');
             exit();
         } else {
-            echo 'Wrong Login Values';
+            $error = 'Wrong Login Values';
         }
     } else {
-        echo 'Username and Password are required';
+        $error = 'Username and Password are required';
     }
 }
 ?>
@@ -66,21 +66,36 @@ if (isset($_POST['submitted'])) {
                 <form action="LoginForm.php" method="post">
                     <div class="form-group">
                         <label for="username"><b>Username</b></label>
-                        <input type="text" class="form-control" id="Username" name="Username" placeholder="Enter Username">
+                        <input type="text" class="form-control" id="Username" name="Username" placeholder="Enter Username" value="<?php echo $_POST['Username']; ?>" onblur="validate(this);" >
+                        <span id="UsernameErr" style="color: red;"></span>
                     </div>
                     <div class="form-group">
                         <label for="password"><b>Password</b></label>
-                        <input type="password" class="form-control" id="Password" name="Password" placeholder="Enter Password">
+                        <input type="password" class="form-control" id="Password" name="Password" placeholder="Enter Password" value="<?php echo $_POST['Password']; ?>" onblur="validate(this);" >
+                        <span id="PasswordErr" style="color: red;"></span>
                     </div>
                     <div class="text-center">
                         <button type="submit" class="btn btn-primary">Login</button>
                         <p class="mt-3">Don't have an account? <a href="Register.php">Register here</a>.</p>
                     </div>
+                    <div class="error" style="color: red;"><?php echo $error; ?></div>
                     <input type="hidden" name="submitted" value="1" />
                 </form>
             </div>
         </div>
     </div>
+    <script>
+    function validate(obj) {
+        var errField = obj.id + 'Err';
+        var value = obj.value.trim();
+
+        if (value === '') {
+            document.getElementById(errField).innerHTML = obj.id + ' field may not be blank';
+        } else {
+            document.getElementById(errField).innerHTML = '';
+        }
+    }
+</script>
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>

@@ -85,15 +85,14 @@ if (isset($_POST['submitted'])) {
                         valid = true;
                     }
                 } else if (obj.id === 'phone') {
-                    if (value.length !== 8) {
-                        document.getElementById(errField).innerHTML = 'Phone number must be 8 digits long';
-                    } 
-                    else if (!/^\d+$/.test(value)) {
-                        document.getElementById(errField).innerHTML = 'Phone number must be numbers';
-                    } else {
-                        document.getElementById(errField).innerHTML = '';
-                        valid = true;
-                    }
+                    if (!/^\d+$/.test(value)) {
+                    document.getElementById(errField).innerHTML = 'Phone number must contain only numbers';
+                }else if (value.length !== 8) {
+                    document.getElementById(errField).innerHTML = 'Phone number must be 8 digits long';
+                }  else {
+                    document.getElementById(errField).innerHTML = '';
+                    valid = true;
+                }
                 } else {
                     document.getElementById(errField).innerHTML = '';
                     valid = true;
