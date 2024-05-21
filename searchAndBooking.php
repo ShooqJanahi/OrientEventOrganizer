@@ -18,6 +18,22 @@ function convertTo24HourFormat($time) {
 // Convert the input time to 24-hour format for comparison
 $time24 = !empty($time) ? convertTo24HourFormat($time) : '';
 
+// Calculate the end date based on the start date and duration
+$endDate = '';
+if (!empty($selectDate) && !empty($duration)) {
+    switch ($duration) {
+        case '1':
+            $endDate = $selectDate; // Same day
+            break;
+        case '7':
+            $endDate = date('Y-m-d', strtotime($selectDate . ' + 6 days')); // 7 days, same day + 6 days
+            break;
+        case '15':
+            $endDate = date('Y-m-d', strtotime($selectDate . ' + 14 days')); // 15 days, same day + 14 days
+            break;
+    }
+}
+
 $sql = "SELECT h.hallId, h.hallName, h.location, h.capacity, h.description, h.image, h.rentalCharge, t.timingSlotStart, t.timingSlotEnd
         FROM dbProj_Hall h
         JOIN dpProj_HallsTimingSlots t ON h.hallId = t.hallId
@@ -26,8 +42,10 @@ $sql = "SELECT h.hallId, h.hallName, h.location, h.capacity, h.description, h.im
 if (!empty($numberOfAudience)) {
     $sql .= " AND h.capacity >= $numberOfAudience";
 }
+
+//Full text index
 if (!empty($searchTerm)) {
-    $sql .= " AND (h.hallName LIKE '%$searchTerm%' OR h.description LIKE '%$searchTerm%')";
+    $sql .= " AND MATCH(h.hallName, h.description) AGAINST ('$searchTerm' IN NATURAL LANGUAGE MODE)";
 }
 if (!empty($selectDate) && !empty($duration)) {
     $sql .= " AND NOT EXISTS (
@@ -35,7 +53,7 @@ if (!empty($selectDate) && !empty($duration)) {
               FROM dbProj_Reservation r
               WHERE r.hallId = h.hallId
                 AND r.timingID = t.timingID
-                AND r.startDate <= DATE_ADD('$selectDate', INTERVAL $duration DAY)
+                AND r.startDate <= '$endDate'
                 AND r.endDate >= '$selectDate'
           )";
 }
@@ -185,12 +203,12 @@ function convertTo12HourFormat($time) {
             <form id="searchForm" method="get" action="searchAndBooking.php">
                 <div class="form-section">
                     <label for="numberOfAudience">Number of Audience:</label>
-                    <input type="number" id="numberOfAudience" name="numberOfAudience" value="<?php echo htmlspecialchars($numberOfAudience); ?>" required>
+                    <input type="number" id="numberOfAudience" name="numberOfAudience" value="<?php echo htmlspecialchars($numberOfAudience); ?>" >
                     <label for="selectDate">Select Date:</label>
-                    <input type="date" id="selectDate" name="selectDate" value="<?php echo htmlspecialchars($selectDate); ?>" required>
+                    <input type="date" id="selectDate" name="selectDate" value="<?php echo htmlspecialchars($selectDate); ?>" >
                     <label for="time">Time:</label>
-                    <input type="time" id="time" name="time" value="<?php echo htmlspecialchars($time); ?>" required>
-                    <select id="duration" name="duration" required>
+                    <input type="time" id="time" name="time" value="<?php echo htmlspecialchars($time); ?>" >
+                    <select id="duration" name="duration" >
                         <option value="">Select Duration</option>
                         <option value="1" <?php echo ($duration == '1') ? 'selected' : ''; ?>>1 Day</option>
                         <option value="7" <?php echo ($duration == '7') ? 'selected' : ''; ?>>1 Week</option>

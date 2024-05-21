@@ -99,9 +99,20 @@
 
         // Calculate end date based on start date and duration
         if ($startDate && $duration) {
-            $startDateObj = new DateTime($startDate);
+            /*$startDateObj = new DateTime($startDate);
             $startDateObj->add(new DateInterval('P' . $duration . 'D'));
-            $endDate = $startDateObj->format('Y-m-d');
+            $endDate = $startDateObj->format('Y-m-d');*/
+             switch ($duration) {
+        case '1':
+            $endDate = $startDate; // Same day
+            break;
+        case '7':
+            $endDate = date('Y-m-d', strtotime($startDate . ' + 6 days')); // 7 days, same day + 6 days
+            break;
+        case '15':
+            $endDate = date('Y-m-d', strtotime($startDate . ' + 14 days')); // 15 days, same day + 14 days
+            break;
+    }
         }
 
         // Fetch hall details based on hallId

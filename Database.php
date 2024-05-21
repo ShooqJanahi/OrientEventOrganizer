@@ -20,12 +20,12 @@ class Database {
     }
 
     function connect() {
-        $this->dblink = new mysqli('localhost', 'u202203500', 'u202203500', 'db202203500');
+        $this->dblink = new mysqli('localhost', 'u202101977', 'u202101977', 'db202101977');
         if ($this->dblink->connect_error) {
             die('CAN NOT CONNECT: ' . $this->dblink->connect_error);
-        } else {
+        }/* else {
             echo 'Connected successfully to the database.<br>'; // Debugging line
-        }
+        }*/
     }
 
     function __destruct() {
@@ -71,7 +71,7 @@ class Database {
             while ($fet = $res->fetch_object()) {
                 $result[] = $fet;
             }
-            echo 'Fetched ' . count($result) . ' rows.<br>'; // Debugging line
+           // echo 'Fetched ' . count($result) . ' rows.<br>'; // Debugging line
         }
         return $result;
     }
