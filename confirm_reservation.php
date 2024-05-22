@@ -1,25 +1,43 @@
+<!-- Shooq -->
+
 <?php
 session_start();
+include 'Database.php';
+include 'Client.php';
 
-// Example function to apply discounts based on client status
-function calculate_discount($status, $total_cost) {
-    switch ($status) {
-        case "Gold":
-            return $total_cost * 0.80;
-        case "Silver":
-            return $total_cost * 0.90;
-        case "Bronze":
-            return $total_cost * 0.95;
-        default:
-            return $total_cost;
-    }
+// Check if the user is logged in
+$loggedIn = isset($_SESSION['userId']);
+$userEmail = '';
+$clientId = '';
+$clientStatus = '';
+
+// Fetch user details if logged in
+if ($loggedIn) {
+    $userId = $_SESSION['userId'];
+    $db = Database::getInstance();
+    $userQuery = "SELECT email FROM dbProj_User WHERE userId = ?";
+    $userDetails = $db->singleFetch($userQuery, [$userId]);
+    $userEmail = $userDetails->email;
+
+    // Fetch client details
+    $clientQuery = "SELECT clientId, clientStatus FROM dbProj_Client WHERE userId = ?";
+    $clientDetails = $db->singleFetch($clientQuery, [$userId]);
+    $clientId = $clientDetails->clientId;
+    $clientStatus = $clientDetails->clientStatus;
 }
 
-// Placeholder for reservation cost calculation
-$total_cost = 1000; // Replace with actual cost calculation logic
-$client_status = isset($logged_in_user['status']) ? $logged_in_user['status'] : 'Bronze';
-$discounted_cost = calculate_discount($client_status, $total_cost);
+// Get selected services and menus from POST
+$selectedMenus = isset($_POST['selectedMenus']) ? $_POST['selectedMenus'] : [];
+$menuPrices = isset($_POST['menuPrices']) ? $_POST['menuPrices'] : [];
+$menuNames = isset($_POST['menuNames']) ? $_POST['menuNames'] : [];
+$menuLists = isset($_POST['menuLists']) ? $_POST['menuLists'] : [];
+
+$selectedServices = isset($_POST['selectedServices']) ? $_POST['selectedServices'] : [];
+$servicePrices = isset($_POST['servicePrices']) ? $_POST['servicePrices'] : [];
+$serviceNames = isset($_POST['serviceNames']) ? $_POST['serviceNames'] : [];
+$serviceLists = isset($_POST['serviceLists']) ? $_POST['serviceLists'] : [];
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -89,7 +107,8 @@ $discounted_cost = calculate_discount($client_status, $total_cost);
 
     <div class="container">
         <h1>Confirm Reservation</h1>
-        <form action="finalize_reservation.php" method="post">
+        <form action="checkout.php" method="post">
+            <!-- Pass reservation details -->
             <input type="hidden" name="hallId" value="<?php echo htmlspecialchars($_POST['hallId']); ?>">
             <input type="hidden" name="hallName" value="<?php echo htmlspecialchars($_POST['hallName']); ?>">
             <input type="hidden" name="start_date" value="<?php echo htmlspecialchars($_POST['start_date']); ?>">
@@ -101,57 +120,40 @@ $discounted_cost = calculate_discount($client_status, $total_cost);
             <input type="hidden" name="rentalDetails" value="<?php echo htmlspecialchars($_POST['rentalDetails']); ?>">
             <input type="hidden" name="totalPrice" value="<?php echo htmlspecialchars($_POST['totalPrice']); ?>">
 
-            <h2>Reservation Details</h2>
-            <p>Hall Name: <?php echo htmlspecialchars($_POST['hallName']); ?></p>
-            <p>Start Date: <?php echo htmlspecialchars($_POST['start_date']); ?></p>
-            <p>End Date: <?php echo htmlspecialchars($_POST['end_date']); ?></p>
-            <p>Duration: <?php echo htmlspecialchars($_POST['duration']); ?> days</p>
-            <p>Number of Audience: <?php echo htmlspecialchars($_POST['audience']); ?></p>
-            <p>Time: <?php echo htmlspecialchars($_POST['time']); ?></p>
-            <p>Rental Details: <?php echo htmlspecialchars($_POST['rentalDetails']); ?> BD</p>
-            <p>Total Price: <?php echo htmlspecialchars($_POST['totalPrice']); ?> BD</p>
+            <!-- Pass selected menus and services -->
+            <?php foreach ($selectedMenus as $index => $menuId): ?>
+                <input type="hidden" name="selectedMenus[]" value="<?php echo htmlspecialchars($menuId); ?>">
+                <input type="hidden" name="menuPrices[]" value="<?php echo htmlspecialchars($menuPrices[$index]); ?>">
+                <input type="hidden" name="menuNames[]" value="<?php echo htmlspecialchars($menuNames[$index]); ?>">
+                <input type="hidden" name="menuLists[]" value="<?php echo htmlspecialchars($menuLists[$index]); ?>">
+            <?php endforeach; ?>
+            <?php foreach ($selectedServices as $index => $serviceId): ?>
+                <input type="hidden" name="selectedServices[]" value="<?php echo htmlspecialchars($serviceId); ?>">
+                <input type="hidden" name="servicePrices[]" value="<?php echo htmlspecialchars($servicePrices[$index]); ?>">
+                <input type="hidden" name="serviceNames[]" value="<?php echo htmlspecialchars($serviceNames[$index]); ?>">
+                <input type="hidden" name="serviceLists[]" value="<?php echo htmlspecialchars($serviceLists[$index]); ?>">
+            <?php endforeach; ?>
 
-            <?php if (isset($_POST['selectedMenus'])): ?>
-                <h3>Selected Menus:</h3>
-                <ul>
-                    <?php foreach ($_POST['selectedMenus'] as $index => $menuId): ?>
-                        <li>Menu ID: <?php echo htmlspecialchars($menuId); ?> (Price: <?php echo htmlspecialchars($_POST['menuPrices'][$index]); ?> BD)</li>
-                        <input type="hidden" name="selectedMenus[]" value="<?php echo htmlspecialchars($menuId); ?>">
-                        <input type="hidden" name="menuPrices[]" value="<?php echo htmlspecialchars($_POST['menuPrices'][$index]); ?>">
-                    <?php endforeach; ?>
-                </ul>
+            <!-- Include user and client details if logged in -->
+            <?php if ($loggedIn): ?>
+                <h2>Client Details</h2>
+                <p>Email: <?php echo htmlspecialchars($userEmail); ?></p>
+                <input type="hidden" name="userEmail" value="<?php echo htmlspecialchars($userEmail); ?>">
+                <input type="hidden" name="clientId" value="<?php echo htmlspecialchars($clientId); ?>">
+                <input type="hidden" name="clientStatus" value="<?php echo htmlspecialchars($clientStatus); ?>">
+                <label for="companyName">Company Name:</label>
+                <input type="text" id="companyName" name="companyName"><br><br>
+            <?php else: ?>
+                <h2>Enter Personal/Business Details to Confirm Reservation</h2>
+                <label for="email">Email:</label>
+                <input type="email" id="email" name="email" required><br><br>
+                <label for="companyName">Company Name:</label>
+                <input type="text" id="companyName" name="companyName"><br><br>
             <?php endif; ?>
-
-            <?php if (isset($_POST['selectedServices'])): ?>
-                <h3>Selected Services:</h3>
-                <ul>
-                    <?php foreach ($_POST['selectedServices'] as $index => $serviceId): ?>
-                        <li>Service ID: <?php echo htmlspecialchars($serviceId); ?> (Price: <?php echo htmlspecialchars($_POST['servicePrices'][$index]); ?> BD)</li>
-                        <input type="hidden" name="selectedServices[]" value="<?php echo htmlspecialchars($serviceId); ?>">
-                        <input type="hidden" name="servicePrices[]" value="<?php echo htmlspecialchars($_POST['servicePrices'][$index]); ?>">
-                    <?php endforeach; ?>
-                </ul>
-            <?php endif; ?>
-
-            <h2>Enter Personal/Business Details to Confirm Reservation</h2>
-            <label for="name">Full Name:</label>
-            <input type="text" id="name" name="name" required><br><br>
-
-            <label for="email">Email:</label>
-            <input type="email" id="email" name="email" required><br><br>
-
-            <label for="phone">Phone Number:</label>
-            <input type="text" id="phone" name="phone" required><br><br>
-
-            <label for="company">Company Name (if applicable):</label>
-            <input type="text" id="company" name="company"><br><br>
-
-            <label for="address">Billing Address:</label>
-            <textarea id="address" name="address" required></textarea><br><br>
 
             <div class="form-buttons">
-                <input type="submit" value="Confirm Reservation">
-                <input type="button" value="Cancel" onclick="window.location.href='main_page.php';">
+                <input type="submit" value="Proceed to Checkout">
+                <input type="button" value="Cancel" onclick="window.location.href='index.php';">
             </div>
         </form>
     </div>

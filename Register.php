@@ -1,28 +1,78 @@
 <?php
 include 'Users.php';
 
+$error = '';
+
+function validatePassword($password) {
+    if (strlen($password) < 8) {
+        return 'Password must be at least 8 characters long';
+    } elseif (!preg_match('/[A-Z]/', $password)) {
+        return 'Password must include at least one uppercase letter';
+    } elseif (!preg_match('/[a-z]/', $password)) {
+        return 'Password must include at least one lowercase letter';
+    } elseif (!preg_match('/[0-9]/', $password)) {
+        return 'Password must include at least one number';
+    } elseif (!preg_match('/[!@#$%^&*]/', $password)) {
+        return 'Password must include at least one special character';
+    } else {
+        return '';
+    }
+}
+
+function validateEmail($email) {
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        return 'Invalid email format';
+    } else {
+        return '';
+    }
+}
+
+function validatePhone($phone) {
+    if (!preg_match('/^\d{8}$/', $phone)) {
+        return 'Phone number must be 8 digits long and contain only numbers';
+    } else {
+        return '';
+    }
+}
+
 if (isset($_POST['submitted'])) {
-    // Create user object and save user details
-        $user = new Users();
-        $user->setUserName($_POST['username']);
-        $user->setUserType("C");
-        $user->setFirstName($_POST['fName']);
-        $user->setLastName($_POST['lName']);
-        $user->setEmail($_POST['email']);
-        $user->setPhoneNumber($_POST['phone']);
-        $user->setPassword($_POST['password']);
-        
-        if ($user->initWithUsername()) {
-            if ($user->registerUser()) {
-                echo 'Registerd Successfully';
-                header('Location: index.php');
+    $passwordError = validatePassword($_POST['password']);
+    $emailError = validateEmail($_POST['email']);
+    $phoneError = validatePhone($_POST['phone']);
+    
+    if ($passwordError) {
+        $error = $passwordError;
+    } elseif ($emailError) {
+        $error = $emailError;
+    } elseif ($phoneError) {
+        $error = $phoneError;
+    } else {
+        try {
+            // Create user object and save user details
+            $user = new Users();
+            $user->setUserName($_POST['username']);
+            $user->setUserType("Client");
+            $user->setFirstName($_POST['fName']);
+            $user->setLastName($_POST['lName']);
+            $user->setEmail($_POST['email']);
+            $user->setPhoneNumber($_POST['phone']);
+            $user->setPassword($_POST['password']);
+            
+            if ($user->initWithUsername()) {
+                if ($user->registerUser()) {
+                    header('Location: LoginForm.php');
+                    exit();
+                } else {
+                    $error = 'Registration not successful. Please try again.';
+                }
             } else {
-                echo 'Not Successfull ';
+                $error = 'Username already exists.';
             }
-        } else {
-            echo 'Username Already Exists';
+        } catch (Exception $e) {
+            $error = 'An error occurred: ' . $e->getMessage();
         }
-}// End of If-Submit statment
+    }
+}
 ?>
 
 <!DOCTYPE html>
@@ -51,9 +101,6 @@ if (isset($_POST['submitted'])) {
         }
         .form-control {
             margin-bottom: 10px;
-        }
-        .container {
-            margin-top: 50px;
         }
         .card {
             width: 100%;
@@ -85,14 +132,21 @@ if (isset($_POST['submitted'])) {
                         valid = true;
                     }
                 } else if (obj.id === 'phone') {
-                    if (!/^\d+$/.test(value)) {
-                    document.getElementById(errField).innerHTML = 'Phone number must contain only numbers';
-                }else if (value.length !== 8) {
-                    document.getElementById(errField).innerHTML = 'Phone number must be 8 digits long';
-                }  else {
-                    document.getElementById(errField).innerHTML = '';
-                    valid = true;
-                }
+                    if (!/^\d{8}$/.test(value)) {
+                        document.getElementById(errField).innerHTML = 'Phone number must be 8 digits long and contain only numbers';
+                    } else {
+                        document.getElementById(errField).innerHTML = '';
+                        valid = true;
+                    }
+                } else if (obj.id === 'password') {
+                    if (value.length < 8) {
+                        document.getElementById(errField).innerHTML = 'Password must be at least 8 characters long';
+                    } else if (!/[a-z]/.test(value) || !/[A-Z]/.test(value) || !/[0-9]/.test(value) || !/[!@#$%^&*]/.test(value)) {
+                        document.getElementById(errField).innerHTML = 'Password must include uppercase, lowercase, number, and special character';
+                    } else {
+                        document.getElementById(errField).innerHTML = '';
+                        valid = true;
+                    }
                 } else {
                     document.getElementById(errField).innerHTML = '';
                     valid = true;
@@ -111,38 +165,39 @@ if (isset($_POST['submitted'])) {
                 <form name="cForm" id="cForm" action="Register.php" method="post">
                     <div class="form-group">
                         <label for="username"><b>Username</b></label>
-                        <input type="text" class="form-control" id="username" name="username" placeholder="Enter Username" onblur="validate(this);" value="<?php echo $_POST['username']; ?>">
+                        <input type="text" class="form-control" id="username" name="username" placeholder="Enter Username" onblur="validate(this);" value="<?php echo htmlspecialchars($_POST['username'] ?? '', ENT_QUOTES); ?>">
                         <span id="usernameErr" class="text-danger"></span>
                     </div>
                     <div class="form-group">
                         <label for="fName"><b>First Name</b></label>
-                        <input type="text" class="form-control" id="fName" name="fName" placeholder="Enter First Name" onblur="validate(this);" value="<?php echo $_POST['fName']; ?>">
+                        <input type="text" class="form-control" id="fName" name="fName" placeholder="Enter First Name" onblur="validate(this);" value="<?php echo htmlspecialchars($_POST['fName'] ?? '', ENT_QUOTES); ?>">
                         <span id="fNameErr" class="text-danger"></span>
                     </div>
                     <div class="form-group">
                         <label for="lName"><b>Last Name</b></label>
-                        <input type="text" class="form-control" id="lName" name="lName" placeholder="Enter Last Name" onblur="validate(this);" value="<?php echo $_POST['lName']; ?>">
+                        <input type="text" class="form-control" id="lName" name="lName" placeholder="Enter Last Name" onblur="validate(this);" value="<?php echo htmlspecialchars($_POST['lName'] ?? '', ENT_QUOTES); ?>">
                         <span id="lNameErr" class="text-danger"></span>
                     </div>
                     <div class="form-group">
                         <label for="phone"><b>Phone Number</b></label>
-                        <input type="text" class="form-control" id="phone" name="phone" placeholder="Enter Phone Number" onblur="validate(this);" value="<?php echo $_POST['phone']; ?>">
+                        <input type="text" class="form-control" id="phone" name="phone" placeholder="Enter Phone Number" onblur="validate(this);" value="<?php echo htmlspecialchars($_POST['phone'] ?? '', ENT_QUOTES); ?>">
                         <span id="phoneErr" class="text-danger"></span>
                     </div>
                     <div class="form-group">
                         <label for="email"><b>Email</b></label>
-                        <input type="email" class="form-control" id="email" name="email" placeholder="Enter Email" onblur="validate(this);" value="<?php echo $_POST['email']; ?>">
+                        <input type="email" class="form-control" id="email" name="email" placeholder="Enter Email" onblur="validate(this);" value="<?php echo htmlspecialchars($_POST['email'] ?? '', ENT_QUOTES); ?>">
                         <span id="emailErr" class="text-danger"></span>
                     </div>
                     <div class="form-group">
                         <label for="password"><b>Password</b></label>
-                        <input type="password" class="form-control" id="password" name="password" placeholder="Enter Password" onblur="validate(this);" value="<?php echo $_POST['password']; ?>">
+                        <input type="password" class="form-control" id="password" name="password" placeholder="Enter Password" onblur="validate(this);" value="<?php echo htmlspecialchars($_POST['password'] ?? '', ENT_QUOTES); ?>">
                         <span id="passwordErr" class="text-danger"></span>
                     </div>
                     <div class="text-center">
                         <button type="submit" class="btn btn-primary">Register</button>
                         <p class="mt-3">Already have an account? <a href="LoginForm.php" class="custom-link">Login here</a>.</p>
                     </div>
+                    <div class="error" style="color: red; text-align: center;"><?php echo htmlspecialchars($error, ENT_QUOTES); ?></div>
                     <input type="hidden" name="submitted" value="1">
                 </form>
             </div>
@@ -153,7 +208,6 @@ if (isset($_POST['submitted'])) {
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </body>
 </html>
-
 
 <?php
 include 'footer.html';

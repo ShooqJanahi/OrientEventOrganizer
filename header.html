@@ -46,7 +46,7 @@ session_start();
                     <li class="nav-item">
                         <a class="nav-link" href="searchAndBooking.php">Booking</a>
                     </li>
-                    <?php if (!empty($_SESSION['userId']) && $_SESSION['userType'] === 'A'): ?>
+                    <?php if (!empty($_SESSION['userId']) && $_SESSION['userType'] === 'Admin'): ?>
                         <li class="nav-item">
                             <a class="nav-link" href="contact.php">Contact</a>
                         </li>
