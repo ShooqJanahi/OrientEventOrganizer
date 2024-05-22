@@ -20,7 +20,7 @@ class Database {
     }
 
     function connect() {
-        $this->dblink = new mysqli('localhost', 'u202203500', 'u202203500', 'db202203500');
+        $this->dblink = new mysqli('localhost', 'u202001753', 'u202001753', 'db202001753');
         if ($this->dblink->connect_error) {
             die('CAN NOT CONNECT: ' . $this->dblink->connect_error);
         } else {

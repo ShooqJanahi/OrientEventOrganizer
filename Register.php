@@ -1,8 +1,10 @@
 <?php
 include 'Users.php';
+
 $error = '';
 if (isset($_POST['submitted'])) {
-    // Create user object and save user details
+    try {
+        // Create user object and save user details
         $user = new Users();
         $user->setUserName($_POST['username']);
         $user->setUserType("Client");
@@ -14,16 +16,20 @@ if (isset($_POST['submitted'])) {
         
         if ($user->initWithUsername()) {
             if ($user->registerUser()) {
-                $error = 'Registerd Successfully';
                 header('Location: LoginForm.php');
+                exit();
             } else {
-                $error = 'Not Successfull ';
+                $error = 'Registration not successful. Please try again.';
             }
         } else {
-            $error = 'Username Already Exists';
+            $error = 'Username already exists.';
         }
-}// End of If-Submit statment
+    } catch (Exception $e) {
+        $error = 'An error occurred: ' . $e->getMessage();
+    }
+}
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -107,39 +113,39 @@ if (isset($_POST['submitted'])) {
                 <form name="cForm" id="cForm" action="Register.php" method="post">
                     <div class="form-group">
                         <label for="username"><b>Username</b></label>
-                        <input type="text" class="form-control" id="username" name="username" placeholder="Enter Username" onblur="validate(this);" value="<?php echo $_POST['username']; ?>">
+                        <input type="text" class="form-control" id="username" name="username" placeholder="Enter Username" onblur="validate(this);" value="<?php echo htmlspecialchars($_POST['username'] ?? '', ENT_QUOTES); ?>">
                         <span id="usernameErr" class="text-danger"></span>
                     </div>
                     <div class="form-group">
                         <label for="fName"><b>First Name</b></label>
-                        <input type="text" class="form-control" id="fName" name="fName" placeholder="Enter First Name" onblur="validate(this);" value="<?php echo $_POST['fName']; ?>">
+                        <input type="text" class="form-control" id="fName" name="fName" placeholder="Enter First Name" onblur="validate(this);" value="<?php echo htmlspecialchars($_POST['fName'] ?? '', ENT_QUOTES); ?>">
                         <span id="fNameErr" class="text-danger"></span>
                     </div>
                     <div class="form-group">
                         <label for="lName"><b>Last Name</b></label>
-                        <input type="text" class="form-control" id="lName" name="lName" placeholder="Enter Last Name" onblur="validate(this);" value="<?php echo $_POST['lName']; ?>">
+                        <input type="text" class="form-control" id="lName" name="lName" placeholder="Enter Last Name" onblur="validate(this);" value="<?php echo htmlspecialchars($_POST['lName'] ?? '', ENT_QUOTES); ?>">
                         <span id="lNameErr" class="text-danger"></span>
                     </div>
                     <div class="form-group">
                         <label for="phone"><b>Phone Number</b></label>
-                        <input type="text" class="form-control" id="phone" name="phone" placeholder="Enter Phone Number" onblur="validate(this);" value="<?php echo $_POST['phone']; ?>">
+                        <input type="text" class="form-control" id="phone" name="phone" placeholder="Enter Phone Number" onblur="validate(this);" value="<?php echo htmlspecialchars($_POST['phone'] ?? '', ENT_QUOTES); ?>">
                         <span id="phoneErr" class="text-danger"></span>
                     </div>
                     <div class="form-group">
                         <label for="email"><b>Email</b></label>
-                        <input type="email" class="form-control" id="email" name="email" placeholder="Enter Email" onblur="validate(this);" value="<?php echo $_POST['email']; ?>">
+                        <input type="email" class="form-control" id="email" name="email" placeholder="Enter Email" onblur="validate(this);" value="<?php echo htmlspecialchars($_POST['email'] ?? '', ENT_QUOTES); ?>">
                         <span id="emailErr" class="text-danger"></span>
                     </div>
                     <div class="form-group">
                         <label for="password"><b>Password</b></label>
-                        <input type="password" class="form-control" id="password" name="password" placeholder="Enter Password" onblur="validate(this);" value="<?php echo $_POST['password']; ?>">
+                        <input type="password" class="form-control" id="password" name="password" placeholder="Enter Password" onblur="validate(this);" value="<?php echo htmlspecialchars($_POST['password'] ?? '', ENT_QUOTES); ?>">
                         <span id="passwordErr" class="text-danger"></span>
                     </div>
                     <div class="text-center">
                         <button type="submit" class="btn btn-primary">Register</button>
                         <p class="mt-3">Already have an account? <a href="LoginForm.php" class="custom-link">Login here</a>.</p>
                     </div>
-                    <div class="error" style="color: red; text-align: center;"><?php echo $error; ?></div>
+                    <div class="error" style="color: red; text-align: center;"><?php echo htmlspecialchars($error, ENT_QUOTES); ?></div>
                     <input type="hidden" name="submitted" value="1">
                 </form>
             </div>
@@ -150,7 +156,6 @@ if (isset($_POST['submitted'])) {
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </body>
 </html>
-
 
 <?php
 include 'footer.html';
