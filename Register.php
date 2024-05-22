@@ -2,30 +2,75 @@
 include 'Users.php';
 
 $error = '';
+
+function validatePassword($password) {
+    if (strlen($password) < 8) {
+        return 'Password must be at least 8 characters long';
+    } elseif (!preg_match('/[A-Z]/', $password)) {
+        return 'Password must include at least one uppercase letter';
+    } elseif (!preg_match('/[a-z]/', $password)) {
+        return 'Password must include at least one lowercase letter';
+    } elseif (!preg_match('/[0-9]/', $password)) {
+        return 'Password must include at least one number';
+    } elseif (!preg_match('/[!@#$%^&*]/', $password)) {
+        return 'Password must include at least one special character';
+    } else {
+        return '';
+    }
+}
+
+function validateEmail($email) {
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        return 'Invalid email format';
+    } else {
+        return '';
+    }
+}
+
+function validatePhone($phone) {
+    if (!preg_match('/^\d{8}$/', $phone)) {
+        return 'Phone number must be 8 digits long and contain only numbers';
+    } else {
+        return '';
+    }
+}
+
 if (isset($_POST['submitted'])) {
-    try {
-        // Create user object and save user details
-        $user = new Users();
-        $user->setUserName($_POST['username']);
-        $user->setUserType("Client");
-        $user->setFirstName($_POST['fName']);
-        $user->setLastName($_POST['lName']);
-        $user->setEmail($_POST['email']);
-        $user->setPhoneNumber($_POST['phone']);
-        $user->setPassword($_POST['password']);
-        
-        if ($user->initWithUsername()) {
-            if ($user->registerUser()) {
-                header('Location: LoginForm.php');
-                exit();
+    $passwordError = validatePassword($_POST['password']);
+    $emailError = validateEmail($_POST['email']);
+    $phoneError = validatePhone($_POST['phone']);
+    
+    if ($passwordError) {
+        $error = $passwordError;
+    } elseif ($emailError) {
+        $error = $emailError;
+    } elseif ($phoneError) {
+        $error = $phoneError;
+    } else {
+        try {
+            // Create user object and save user details
+            $user = new Users();
+            $user->setUserName($_POST['username']);
+            $user->setUserType("Client");
+            $user->setFirstName($_POST['fName']);
+            $user->setLastName($_POST['lName']);
+            $user->setEmail($_POST['email']);
+            $user->setPhoneNumber($_POST['phone']);
+            $user->setPassword($_POST['password']);
+            
+            if ($user->initWithUsername()) {
+                if ($user->registerUser()) {
+                    header('Location: LoginForm.php');
+                    exit();
+                } else {
+                    $error = 'Registration not successful. Please try again.';
+                }
             } else {
-                $error = 'Registration not successful. Please try again.';
+                $error = 'Username already exists.';
             }
-        } else {
-            $error = 'Username already exists.';
+        } catch (Exception $e) {
+            $error = 'An error occurred: ' . $e->getMessage();
         }
-    } catch (Exception $e) {
-        $error = 'An error occurred: ' . $e->getMessage();
     }
 }
 ?>
@@ -87,14 +132,21 @@ if (isset($_POST['submitted'])) {
                         valid = true;
                     }
                 } else if (obj.id === 'phone') {
-                    if (!/^\d+$/.test(value)) {
-                    document.getElementById(errField).innerHTML = 'Phone number must contain only numbers';
-                }else if (value.length !== 8) {
-                    document.getElementById(errField).innerHTML = 'Phone number must be 8 digits long';
-                }  else {
-                    document.getElementById(errField).innerHTML = '';
-                    valid = true;
-                }
+                    if (!/^\d{8}$/.test(value)) {
+                        document.getElementById(errField).innerHTML = 'Phone number must be 8 digits long and contain only numbers';
+                    } else {
+                        document.getElementById(errField).innerHTML = '';
+                        valid = true;
+                    }
+                } else if (obj.id === 'password') {
+                    if (value.length < 8) {
+                        document.getElementById(errField).innerHTML = 'Password must be at least 8 characters long';
+                    } else if (!/[a-z]/.test(value) || !/[A-Z]/.test(value) || !/[0-9]/.test(value) || !/[!@#$%^&*]/.test(value)) {
+                        document.getElementById(errField).innerHTML = 'Password must include uppercase, lowercase, number, and special character';
+                    } else {
+                        document.getElementById(errField).innerHTML = '';
+                        valid = true;
+                    }
                 } else {
                     document.getElementById(errField).innerHTML = '';
                     valid = true;
