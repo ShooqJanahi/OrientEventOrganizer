@@ -127,6 +127,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['proceed_to_payment'])
         $stmt->close();
     }
 
+    // Pass reservation data to payment page
+    $_SESSION['reservationId'] = $reservationId;
+    $_SESSION['totalPrice'] = $totalPrice;
+    $_SESSION['email'] = $_POST['email'];
+    $_SESSION['reservationSummary'] = "Hall Name: $hallName\nStart Date: $startDate\nEnd Date: $endDate\nDuration: $duration days\nNumber of Audience: $audience\nTime: $time\nRental Details: $rentalDetails BD\nTotal Price: $totalPrice BD\nDiscounted Price: $discountedPrice BD\nCompany Name: $companyName";
+
     header('Location: payment.php');
     exit();
 }
@@ -279,6 +285,7 @@ $serviceLists = isset($_POST['serviceLists']) ? $_POST['serviceLists'] : [];
                 <input type="hidden" name="clientId" value="<?php echo htmlspecialchars($clientId); ?>">
                 <input type="hidden" name="clientStatus" value="<?php echo htmlspecialchars($clientStatus); ?>">
                 <input type="hidden" name="companyName" value="<?php echo htmlspecialchars($companyName); ?>">
+                <input type="hidden" name="email" value="<?php echo htmlspecialchars($email); ?>">
 
                 <!-- Pass selected menus and services -->
                 <?php foreach ($selectedMenus as $index => $menuId): ?>
