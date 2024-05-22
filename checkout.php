@@ -1,4 +1,3 @@
-<!-- Shooq -->
 <?php
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
@@ -52,6 +51,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['proceed_to_payment'])
         die("Client ID does not exist in dbProj_Client.");
     }
 
+    // Insert event details into the database
+    $stmt = $db->prepare("INSERT INTO dbProj_event (eventType, numberOfAudiance, numberOFDays) VALUES (?, ?, ?)");
+    if ($stmt === false) {
+        die("Prepare failed: " . $db->error);
+    }
+
+    $eventType = "Workshop"; // Default value
+    $numberOfAudiance = $audience;
+    $numberOfDays = $duration;
+
+    if (!$stmt->bind_param("sii", $eventType, $numberOfAudiance, $numberOfDays)) {
+        die("Bind failed: " . $stmt->error);
+    }
+
+    if (!$stmt->execute()) {
+        die("Execute failed: " . $stmt->error);
+    }
+
+    $eventId = $stmt->insert_id; // Get the inserted event ID
+    $stmt->close();
+
     // Insert reservation details into the database
     $stmt = $db->prepare("INSERT INTO dbProj_Reservation (reservationDate, startDate, endDate, timingID, totalCost, discountRate, clientId, hallId, eventId) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
     if ($stmt === false) {
@@ -61,7 +81,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['proceed_to_payment'])
     $reservationDate = date('Y-m-d');
     $timingID = 1; // Example value, update according to your logic
     $discountRate = $discountedPrice < $totalPrice ? ($totalPrice - $discountedPrice) / $totalPrice : 0;
-    $eventId = 1; // Example value, update according to your logic
 
     if (!$stmt->bind_param("sssiddiii", $reservationDate, $startDate, $endDate, $timingID, $totalPrice, $discountRate, $clientId, $hallId, $eventId)) {
         die("Bind failed: " . $stmt->error);
@@ -71,7 +90,42 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['proceed_to_payment'])
         die("Execute failed: " . $stmt->error);
     }
 
+    $reservationId = $stmt->insert_id; // Get the inserted reservation ID
     $stmt->close();
+
+    // Insert catering details into the database if menus or services were selected
+    if (!empty($_POST['selectedMenus']) || !empty($_POST['selectedServices'])) {
+        $stmt = $db->prepare("INSERT INTO dbProj_Catering (reservationId, menuId, packageId) VALUES (?, ?, ?)");
+        if ($stmt === false) {
+            die("Prepare failed: " . $db->error);
+        }
+
+        foreach ($_POST['selectedMenus'] as $menuId) {
+            $packageId = null; // No service package in this case
+
+            if (!$stmt->bind_param("iii", $reservationId, $menuId, $packageId)) {
+                die("Bind failed: " . $stmt->error);
+            }
+
+            if (!$stmt->execute()) {
+                die("Execute failed: " . $stmt->error);
+            }
+        }
+
+        foreach ($_POST['selectedServices'] as $packageId) {
+            $menuId = null; // No menu in this case
+
+            if (!$stmt->bind_param("iii", $reservationId, $menuId, $packageId)) {
+                die("Bind failed: " . $stmt->error);
+            }
+
+            if (!$stmt->execute()) {
+                die("Execute failed: " . $stmt->error);
+            }
+        }
+
+        $stmt->close();
+    }
 
     header('Location: payment.php');
     exit();
