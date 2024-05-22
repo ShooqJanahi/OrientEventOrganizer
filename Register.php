@@ -3,26 +3,26 @@ include 'Users.php';
 
 if (isset($_POST['submitted'])) {
     // Create user object and save user details
-        $user = new Users();
-        $user->setUserName($_POST['username']);
-        $user->setUserType("C");
-        $user->setFirstName($_POST['fName']);
-        $user->setLastName($_POST['lName']);
-        $user->setEmail($_POST['email']);
-        $user->setPhoneNumber($_POST['phone']);
-        $user->setPassword($_POST['password']);
-        
-        if ($user->initWithUsername()) {
-            if ($user->registerUser()) {
-                echo 'Registerd Successfully';
-                header('Location: index.php');
-            } else {
-                echo 'Not Successfull ';
-            }
+    $user = new Users();
+    $user->setUserName($_POST['username']);
+    $user->setUserType("C");
+    $user->setFirstName($_POST['fName']);
+    $user->setLastName($_POST['lName']);
+    $user->setEmail($_POST['email']);
+    $user->setPhoneNumber($_POST['phone']);
+    $user->setPassword($_POST['password']);
+    
+    if ($user->initWithUsername()) {
+        if ($user->registerUser()) {
+            echo 'Registerd Successfully';
+            header('Location: index.php');
         } else {
-            echo 'Username Already Exists';
+            echo 'Not Successfull ';
         }
-}// End of If-Submit statment
+    } else {
+        echo 'Username Already Exists';
+    }
+}// End of If-Submit statement
 ?>
 
 <!DOCTYPE html>
@@ -154,7 +154,4 @@ if (isset($_POST['submitted'])) {
 </body>
 </html>
 
-
-<?php
-include 'footer.html';
-?>
+<?php include 'footer.html'; ?>

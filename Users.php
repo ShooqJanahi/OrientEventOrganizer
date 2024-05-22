@@ -127,23 +127,36 @@ include 'Database.php';
         return true;
     }
     
-    public function registerUser() {
-         if ($this->isValid()) {
-            try {
-                $db = Database::getInstance();
-                $stmt = $db->prepare("INSERT INTO dbProj_User (username, userType, firstName, lastName, password, email, phoneNumber) 
-                        VALUES (?, ?, ?, ?, AES_ENCRYPT(?, 'p0ly'), ?, ?)");
+public function registerUser() {
+    if ($this->isValid()) {
+        try {
+            $db = Database::getInstance();
+            $stmt = $db->prepare("INSERT INTO dbProj_User (username, userType, firstName, lastName, password, email, phoneNumber) 
+                    VALUES (?, ?, ?, ?, AES_ENCRYPT(?, 'p0ly'), ?, ?)");
+            if ($stmt) {
                 $stmt->bind_param("sssssss", $this->username, $this->userType, $this->firstName, $this->lastName, $this->password, $this->email, $this->phoneNumber);
-                $stmt->execute();
-                return true;
-            } catch (Exception $e) {
-                echo 'Exception: ' . $e;
-                return false;
+                if ($stmt->execute()) {
+                    $stmt->close();
+                    return true;
+                } else {
+                    throw new Exception("Execute failed: " . $stmt->error);
+                }
+            } else {
+                throw new Exception("Prepare failed: " . $db->error);
             }
-        } else {
+        } catch (Exception $e) {
+            error_log('Exception: ' . $e->getMessage(), 3, "/path/to/your/logfile.log"); // Replace with the actual path to your log file
+            echo 'Exception: ' . $e->getMessage();
             return false;
         }
+    } else {
+        return false;
     }
+}
+
+    
+    
+    
 
     private function initWith($userId, $username, $userType, $firstName, $lastName, $password, $email, $phoneNumber) {
         $this->userId = $userId;

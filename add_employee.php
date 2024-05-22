@@ -25,9 +25,11 @@ if (isset($_POST['submitted'])) {
         if ($employee->registerEmployee()) {
             echo 'Employee added successfully';
         } else {
+            error_log("Error adding employee: " . $employee->getLastError());
             echo '<p class="error">Error adding employee. Please check the logs for details.</p>';
         }
     } else {
+        error_log("Error adding user: " . $user->getLastError());
         echo '<p class="error">Error adding user. Please check the logs for details.</p>';
     }
 }

@@ -3,30 +3,14 @@
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
         <group>
-<<<<<<< HEAD
-<<<<<<< Updated upstream
-            <file>file:/C:/Users/DELL/OneDrive/سطح%20المكتب/OrientEventOrganizer/images/small_hall2.jpg</file>
-            <file>file:/C:/Users/DELL/OneDrive/سطح%20المكتب/OrientEventOrganizer/index.php</file>
-            <file>file:/C:/Users/DELL/OneDrive/سطح%20المكتب/OrientEventOrganizer/images/small_hall3.jpg</file>
-            <file>file:/C:/Users/DELL/OneDrive/سطح%20المكتب/OrientEventOrganizer/images/lab.jpg</file>
-            <file>file:/C:/Users/DELL/OneDrive/سطح%20المكتب/OrientEventOrganizer/images/small_hall1.jpg</file>
-            <file>file:/C:/Users/DELL/OneDrive/سطح%20المكتب/OrientEventOrganizer/images/seminar_hall.jpg</file>
-=======
-            <file>file:/C:/Users/DELL/OneDrive/سطح%20المكتب/OrientEventOrganizer/index.php</file>
-            <file>file:/C:/Users/DELL/OneDrive/سطح%20المكتب/OrientEventOrganizer/css/animate.min.css</file>
-            <file>file:/C:/Users/DELL/OneDrive/سطح%20المكتب/OrientEventOrganizer/css/style.css</file>
-            <file>file:/C:/Users/DELL/OneDrive/سطح%20المكتب/OrientEventOrganizer/Database.php</file>
-            <file>file:/C:/Users/DELL/OneDrive/سطح%20المكتب/OrientEventOrganizer/Login.php</file>
-            <file>file:/C:/Users/DELL/OneDrive/سطح%20المكتب/OrientEventOrganizer/css/bootstrap-grid.css</file>
->>>>>>> Stashed changes
-=======
-            <file>file:/C:/Users/Shooq/OneDrive/Desktop/IT8415%20-%20Database%20Programming%202/Project/OrientEventOrganizer/confirm_reservation.php</file>
-            <file>file:/C:/Users/Shooq/OneDrive/Desktop/IT8415%20-%20Database%20Programming%202/Project/OrientEventOrganizer/save_amended_reservation.php</file>
-            <file>file:/C:/Users/Shooq/OneDrive/Desktop/IT8415%20-%20Database%20Programming%202/Project/OrientEventOrganizer/amend_reservation.php</file>
-            <file>file:/C:/Users/Shooq/OneDrive/Desktop/IT8415%20-%20Database%20Programming%202/Project/OrientEventOrganizer/Invoice.php</file>
-            <file>file:/C:/Users/Shooq/OneDrive/Desktop/IT8415%20-%20Database%20Programming%202/Project/OrientEventOrganizer/Database.php</file>
-            <file>file:/C:/Users/Shooq/OneDrive/Desktop/IT8415%20-%20Database%20Programming%202/Project/OrientEventOrganizer/Payment.php</file>
->>>>>>> master
+            <file>file:/C:/Users/DELL/OneDrive/سطح%20المكتب/OrientEventOrganizer/select_services.php</file>
+            <file>file:/C:/Users/DELL/OneDrive/سطح%20المكتب/OrientEventOrganizer/payment.php</file>
+            <file>file:/C:/Users/DELL/OneDrive/سطح%20المكتب/OrientEventOrganizer/confirm_payment.php</file>
+            <file>file:/C:/Users/DELL/OneDrive/سطح%20المكتب/OrientEventOrganizer/Confirm_Booking.php</file>
+            <file>file:/C:/Users/DELL/OneDrive/سطح%20المكتب/OrientEventOrganizer/confirm_reservation.php</file>
+            <file>file:/C:/Users/DELL/OneDrive/سطح%20المكتب/OrientEventOrganizer/checkout.php</file>
+            <file>file:/C:/Users/DELL/OneDrive/سطح%20المكتب/OrientEventOrganizer/invoice.php</file>
+            <file>file:/C:/Users/DELL/OneDrive/سطح%20المكتب/OrientEventOrganizer/finalize_reservation.php</file>
         </group>
     </open-files>
 </project-private>

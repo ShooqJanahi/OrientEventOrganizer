@@ -1,52 +1,64 @@
-<!-- Shooq -->
 <?php
 session_start();
-include 'Database.php'; // Your database connection file
+include 'Database.php';
 
-// Retrieve the reservation code from the query string
-$reservation_code = isset($_GET['code']) ? $_GET['code'] : '';
-if (!$reservation_code) {
-    die("Reservation code is required.");
+// Check if user is logged in
+if (!isset($_SESSION['userId'])) {
+    header('Location: LoginForm.php');
+    exit();
 }
 
-// Fetch reservation details
-$stmt = $pdo->prepare("SELECT * FROM dbProj_Reservation WHERE reservationId = :code");
-$stmt->execute(['code' => $reservation_code]);
-$reservation = $stmt->fetch(PDO::FETCH_ASSOC);
+$invoiceId = $_GET['invoiceId'];
+$db = Database::getInstance();
 
-if (!$reservation) {
-    die("Reservation not found.");
-}
+$sql = "SELECT * FROM dpProj_Inovice WHERE invoiceId = ?";
+$stmt = $db->prepare($sql);
+$stmt->bind_param('i', $invoiceId);
+$stmt->execute();
+$result = $stmt->get_result();
+$invoice = $result->fetch_object();
 
-// Fetch invoice details
-$stmt = $pdo->prepare("SELECT * FROM dbProj_Inovice WHERE reservationId = :code");
-$stmt->execute(['code' => $reservation_code]);
-$invoice = $stmt->fetch(PDO::FETCH_ASSOC);
+$sql_payment = "SELECT * FROM dpProj_Payment WHERE paymentId = ?";
+$stmt_payment = $db->prepare($sql_payment);
+$stmt_payment->bind_param('i', $invoice->paymentId);
+$stmt_payment->execute();
+$result_payment = $stmt_payment->get_result();
+$payment = $result_payment->fetch_object();
 
-if (!$invoice) {
-    die("Invoice not found.");
-}
+$sql_reservation = "SELECT * FROM dbProj_Reservation WHERE reservationId = ?";
+$stmt_reservation = $db->prepare($sql_reservation);
+$stmt_reservation->bind_param('i', $payment->reservationId);
+$stmt_reservation->execute();
+$result_reservation = $stmt_reservation->get_result();
+$reservation = $result_reservation->fetch_object();
 
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Reservation Summary</title>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <title>Invoice</title>
+    <style>
+        /* Your styles here */
+    </style>
 </head>
 <body>
-    <div class="container mt-5">
-        <h1 class="mb-4">Reservation Summary</h1>
-        <p>Reservation Code: <?= htmlspecialchars($reservation_code) ?></p>
-        <p>Total Cost: $<?= htmlspecialchars($reservation['totalCost']) ?></p>
-        <h3>Invoice Details</h3>
-        <ul>
-            <li>Payment Type: <?= htmlspecialchars($invoice['paymentType']) ?></li>
-            <li>Amount Paid: $<?= htmlspecialchars($invoice['amountPaid']) ?></li>
-            <li>Payment Date: <?= htmlspecialchars($invoice['paymentDate']) ?></li>
-        </ul>
-        <a href="index.php" class="btn btn-primary">Return to Main Page</a>
+    <header>
+        <?php include 'header.html'; ?>
+    </header>
+    <div class="container">
+        <h1>Invoice</h1>
+        <p>Thank you for your reservation. Here are your details:</p>
+        <p>Invoice ID: <?php echo htmlspecialchars($invoice->invoiceId); ?></p>
+        <p>Amount: <?php echo htmlspecialchars($invoice->amount); ?> BD</p>
+        <p>Date: <?php echo htmlspecialchars($invoice->date); ?></p>
+        <p>Reservation ID: <?php echo htmlspecialchars($reservation->reservationId); ?></p>
+        <p>Payment Type: <?php echo htmlspecialchars($payment->paymentType); ?></p>
+        <p>Card Holder Name: <?php echo htmlspecialchars($payment->cardHolderName); ?></p>
+        <p>Billing Address: <?php echo htmlspecialchars($payment->billingAddress); ?></p>
     </div>
+    <footer>
+        <?php include 'footer.html'; ?>
+    </footer>
 </body>
 </html>

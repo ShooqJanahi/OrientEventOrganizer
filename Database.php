@@ -15,7 +15,8 @@ class Database {
             $this->connect();
         }
     }
-     public function getConnection() {
+
+    public function getConnection() {
         return $this->dblink;
     }
 
@@ -37,8 +38,6 @@ class Database {
     function close() {
         $this->dblink->close();
     }
-    
-    
 
     function querySQL($sql, $params = []) {
         if ($sql != null && $sql != '') {
@@ -92,15 +91,22 @@ class Database {
 
     public function getLastInsertId() {
         return $this->dblink->insert_id;
-    } 
-  public function prepare($query) {
+    }
+
+    public function beginTransaction() {
+        $this->dblink->begin_transaction();
+    }
+
+    public function commit() {
+        $this->dblink->commit();
+    }
+
+    public function rollback() {
+        $this->dblink->rollback();
+    }
+
+    function prepare($query) {
         return $this->dblink->prepare($query);
     }
-    
-    /*
-         function prepare($query) {
-        return mysqli_prepare($this->dblink, $query);
-    }
-     */
 }
 ?>
