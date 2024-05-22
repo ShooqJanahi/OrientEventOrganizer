@@ -1,10 +1,12 @@
 <?php
 session_start();
 $error = '';
+
 // Check if the login form is submitted
 if (isset($_POST['submitted'])) {
     include 'Login.php';
     $lgnObj = new Login(); // Create a new instance of the Login class
+
     // Get username and password from the form
     $username = trim($_POST['Username']);
     $password = trim($_POST['Password']);
@@ -23,7 +25,6 @@ if (isset($_POST['submitted'])) {
 }
 ?>
 
-<!-- Login form start -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -55,6 +56,9 @@ if (isset($_POST['submitted'])) {
         .custom-login-form a:hover {
             color: darkblue;
         }
+        .error {
+            color: red;
+        }
     </style>
 </head>
 <body>
@@ -63,47 +67,55 @@ if (isset($_POST['submitted'])) {
         <div class="card">
             <div class="card-body">
                 <h1 class="card-title text-center">Login</h1>
-                <form action="LoginForm.php" method="post">
+                <form action="LoginForm.php" method="post" onsubmit="return validateForm();">
                     <div class="form-group">
-                        <label for="username"><b>Username</b></label>
-                        <input type="text" class="form-control" id="Username" name="Username" placeholder="Enter Username" value="<?php echo $_POST['Username']; ?>" onblur="validate(this);" >
+                        <label for="Username"><b>Username</b></label>
+                        <input type="text" class="form-control" id="Username" name="Username" placeholder="Enter Username" value="<?php echo htmlspecialchars($_POST['Username'] ?? '', ENT_QUOTES); ?>">
                         <span id="UsernameErr" style="color: red;"></span>
                     </div>
                     <div class="form-group">
-                        <label for="password"><b>Password</b></label>
-                        <input type="password" class="form-control" id="Password" name="Password" placeholder="Enter Password" value="<?php echo $_POST['Password']; ?>" onblur="validate(this);" >
+                        <label for="Password"><b>Password</b></label>
+                        <input type="password" class="form-control" id="Password" name="Password" placeholder="Enter Password" value="<?php echo htmlspecialchars($_POST['Password'] ?? '', ENT_QUOTES); ?>">
                         <span id="PasswordErr" style="color: red;"></span>
                     </div>
                     <div class="text-center">
                         <button type="submit" class="btn btn-primary">Login</button>
                         <p class="mt-3">Don't have an account? <a href="Register.php">Register here</a>.</p>
                     </div>
-                    <div class="error" style="color: red; text-align: center;"><?php echo $error; ?></div>
+                    <div class="error text-center"><?php echo $error; ?></div>
                     <input type="hidden" name="submitted" value="1" />
                 </form>
             </div>
         </div>
     </div>
     <script>
-    function validate(obj) {
-        var errField = obj.id + 'Err';
-        var value = obj.value.trim();
+    function validateForm() {
+        let isValid = true;
+        const username = document.getElementById('Username').value.trim();
+        const password = document.getElementById('Password').value.trim();
 
-        if (value === '') {
-            document.getElementById(errField).innerHTML = obj.id + ' field may not be blank';
+        if (username === '') {
+            document.getElementById('UsernameErr').textContent = 'Username field may not be blank';
+            isValid = false;
         } else {
-            document.getElementById(errField).innerHTML = '';
+            document.getElementById('UsernameErr').textContent = '';
         }
+
+        if (password === '') {
+            document.getElementById('PasswordErr').textContent = 'Password field may not be blank';
+            isValid = false;
+        } else {
+            document.getElementById('PasswordErr').textContent = '';
+        }
+
+        return isValid;
     }
-</script>
+    </script>
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </body>
 </html>
-
-<!-- Login form end -->
-
 <?php 
 include 'footer.html';
 ?>
