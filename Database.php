@@ -97,6 +97,7 @@ class Database {
         return $this->dblink->prepare($query);
     }
     
+    
     /*
          function prepare($query) {
         return mysqli_prepare($this->dblink, $query);

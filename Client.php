@@ -108,30 +108,31 @@ class Client {
         return false;
     }
 
-    public function initWithClientId($clientId) {
-        $db = Database::getInstance();
-        $sql = "SELECT * FROM dbProj_Client WHERE clientId = ?";
-        $params = [$clientId];
-        $clientData = $db->singleFetch($sql, $params);
+   public function initWithClientId($clientId) {
+    $db = Database::getInstance();
+    $sql = "SELECT * FROM dbProj_Client WHERE clientId = ?";
+    $params = [$clientId];
+    $clientData = $db->singleFetch($sql, $params);
 
-        if ($clientData) {
-            $this->clientId = $clientData->clientId;
-            $this->userId = $clientData->userId;
-            $this->companyName = $clientData->companyName;
-            $this->royaltyPoints = $clientData->royaltyPoints;
+    if ($clientData) {
+        $this->clientId = $clientData->clientId;
+        $this->userId = $clientData->userId;
+        $this->companyName = $clientData->companyName;
+        $this->royaltyPoints = $clientData->royaltyPoints;
 
-            // Fetch user details
-            $user = new Users();
-            if ($user->initWithUserId($this->userId)) {
-                return $user;
-            } else {
-                error_log("User data not found for userId: " . $this->userId);
-            }
+        // Fetch user details
+        $user = new Users();
+        if ($user->initWithUid($this->userId)) { // Use initWithUid instead of initWithUserId
+            return $user;
         } else {
-            error_log("Client data not found for clientId: " . $clientId);
+            error_log("User data not found for userId: " . $this->userId);
         }
-        return false;
+    } else {
+        error_log("Client data not found for clientId: " . $clientId);
     }
+    return false;
+}
+
 }
 
 ?>

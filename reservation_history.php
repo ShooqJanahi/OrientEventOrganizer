@@ -1,6 +1,10 @@
 <?php
 session_start();
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
 include 'Login.php';
+include 'Client.php';
 
 $login = new Login(); // Initialize the login system
 
@@ -12,22 +16,23 @@ if (!$login->check_session()) {
 // Get the user ID from the session
 $userId = $_SESSION['userId'];
 
-// Database connection
-include 'database.php';
+// Fetch client data using user ID
+$client = new Client();
+$clientData = $client->initWithUserId($userId); // Use initWithUserId to fetch client data by user ID
+$clientId = $client->getClientId();
 
-// Fetch client ID using user ID
-$clientQuery = $conn->prepare("SELECT clientId FROM dbProj_Client WHERE userId = ?");
-$clientQuery->bind_param("i", $userId);
-$clientQuery->execute();
-$clientResult = $clientQuery->get_result();
-$client = $clientResult->fetch_assoc();
-$clientId = $client['clientId'];
+// If no client data is found, redirect to login
+if (!$clientData || is_null($clientId)) {
+    header('Location: LoginForm.php');
+    exit();
+}
 
 // Fetch reservations for the client
-$reservationQuery = $conn->prepare("SELECT * FROM dbProj_Reservation WHERE clientId = ?");
-$reservationQuery->bind_param("i", $clientId);
-$reservationQuery->execute();
-$reservationResult = $reservationQuery->get_result();
+$db = Database::getInstance();
+$sql = "SELECT * FROM dbProj_Reservation WHERE clientId = ?";
+$params = [$clientId];
+$reservations = $db->multiFetch($sql, $params);
+
 ?>
 
 <!DOCTYPE html>
@@ -54,18 +59,18 @@ $reservationResult = $reservationQuery->get_result();
                 </tr>
             </thead>
             <tbody>
-                <?php while ($reservation = $reservationResult->fetch_assoc()): ?>
+                <?php foreach ($reservations as $reservation): ?>
                     <tr>
-                        <td><?php echo $reservation['reservationId']; ?></td>
-                        <td><?php echo $reservation['reservationDate']; ?></td>
-                        <td><?php echo $reservation['startDate']; ?></td>
-                        <td><?php echo $reservation['endDate']; ?></td>
-                        <td><?php echo $reservation['totalCost']; ?></td>
-                        <td><?php echo $reservation['discountRate']; ?></td>
-                        <td><?php echo $reservation['hallId']; ?></td>
-                        <td><?php echo $reservation['eventId']; ?></td>
+                        <td><?php echo htmlspecialchars($reservation->reservationId); ?></td>
+                        <td><?php echo htmlspecialchars($reservation->reservationDate); ?></td>
+                        <td><?php echo htmlspecialchars($reservation->startDate); ?></td>
+                        <td><?php echo htmlspecialchars($reservation->endDate); ?></td>
+                        <td><?php echo htmlspecialchars($reservation->totalCost); ?></td>
+                        <td><?php echo htmlspecialchars($reservation->discountRate); ?></td>
+                        <td><?php echo htmlspecialchars($reservation->hallId); ?></td>
+                        <td><?php echo htmlspecialchars($reservation->eventId); ?></td>
                     </tr>
-                <?php endwhile; ?>
+                <?php endforeach; ?>
             </tbody>
         </table>
     </div>
@@ -74,5 +79,5 @@ $reservationResult = $reservationQuery->get_result();
 </html>
 
 <?php
-$conn->close();
+$db->close();
 ?>

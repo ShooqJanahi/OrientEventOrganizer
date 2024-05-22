@@ -1,6 +1,7 @@
 <?php
 // Include the admin header
 include 'banner.html';
+
 ?>
 <!DOCTYPE html>
 <html>
