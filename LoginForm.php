@@ -78,7 +78,7 @@ if (isset($_POST['submitted'])) {
                         <button type="submit" class="btn btn-primary">Login</button>
                         <p class="mt-3">Don't have an account? <a href="Register.php">Register here</a>.</p>
                     </div>
-                    <div class="error" style="color: red;"><?php echo $error; ?></div>
+                    <div class="error" style="color: red; text-align: center;"><?php echo $error; ?></div>
                     <input type="hidden" name="submitted" value="1" />
                 </form>
             </div>

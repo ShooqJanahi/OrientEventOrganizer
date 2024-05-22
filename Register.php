@@ -1,11 +1,11 @@
 <?php
 include 'Users.php';
-
+$error = '';
 if (isset($_POST['submitted'])) {
     // Create user object and save user details
         $user = new Users();
         $user->setUserName($_POST['username']);
-        $user->setUserType("C");
+        $user->setUserType("Client");
         $user->setFirstName($_POST['fName']);
         $user->setLastName($_POST['lName']);
         $user->setEmail($_POST['email']);
@@ -14,17 +14,16 @@ if (isset($_POST['submitted'])) {
         
         if ($user->initWithUsername()) {
             if ($user->registerUser()) {
-                echo 'Registerd Successfully';
-                header('Location: index.php');
+                $error = 'Registerd Successfully';
+                header('Location: LoginForm.php');
             } else {
-                echo 'Not Successfull ';
+                $error = 'Not Successfull ';
             }
         } else {
-            echo 'Username Already Exists';
+            $error = 'Username Already Exists';
         }
 }// End of If-Submit statment
 ?>
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -51,9 +50,6 @@ if (isset($_POST['submitted'])) {
         }
         .form-control {
             margin-bottom: 10px;
-        }
-        .container {
-            margin-top: 50px;
         }
         .card {
             width: 100%;
@@ -143,6 +139,7 @@ if (isset($_POST['submitted'])) {
                         <button type="submit" class="btn btn-primary">Register</button>
                         <p class="mt-3">Already have an account? <a href="LoginForm.php" class="custom-link">Login here</a>.</p>
                     </div>
+                    <div class="error" style="color: red; text-align: center;"><?php echo $error; ?></div>
                     <input type="hidden" name="submitted" value="1">
                 </form>
             </div>
