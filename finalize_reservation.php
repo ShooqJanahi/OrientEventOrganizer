@@ -18,10 +18,26 @@ function sendConfirmationEmail($email, $reservationId, $invoiceId, $reservationS
     mail($email, $subject, $message, $headers);
 }
 
+// Fetch user details if logged in
+if (isset($_SESSION['userId'])) {
+    $userId = $_SESSION['userId'];
+    $db = Database::getInstance();
+
+    // Fetch the email of the logged-in user
+    $userQuery = "SELECT email FROM dbProj_User WHERE userId = ?";
+    $userDetails = $db->singleFetch($userQuery, [$userId]);
+    if ($userDetails) {
+        $userEmail = $userDetails->email;
+    } else {
+        die('Error: Could not fetch user email.');
+    }
+} else {
+    die('Error: User not logged in.');
+}
+
 // Retrieve payment details
 $reservationId = $_GET['reservationId'];
 $invoiceId = $_GET['invoiceId'];
-$db = Database::getInstance();
 
 $sql = "SELECT * FROM dpProj_Inovice WHERE invoiceId = ?";
 $stmt = $db->prepare($sql);
@@ -44,9 +60,6 @@ $stmt_reservation->execute();
 $result_reservation = $stmt_reservation->get_result();
 $reservation = $result_reservation->fetch_object();
 
-// Assuming you have the user's email stored in the payment table
-$userEmail = $payment->cardHolderName; // Adjust this if the email is stored elsewhere
-
 // Prepare reservation summary
 $reservationSummary = "Amount: {$invoice->amount} BD\n" . 
                       "Date: {$invoice->date}\n" . 
@@ -56,7 +69,6 @@ $reservationSummary = "Amount: {$invoice->amount} BD\n" .
 
 // Send confirmation email
 sendConfirmationEmail($userEmail, $reservationId, $invoiceId, $reservationSummary);
-
 ?>
 
 <!DOCTYPE html>
