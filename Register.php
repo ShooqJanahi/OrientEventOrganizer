@@ -63,40 +63,56 @@ if (isset($_POST['submitted'])) {
         }
     </style>
     <script>
-        // Function to validate the entered data in fields
-        function validate(obj) {
-            var errField = obj.id + 'Err';
-            var valid = false;
-            var value = obj.value.trim();
+    // Function to validate the entered data in fields
+    function validate(obj) {
+        var errField = obj.id + 'Err';
+        var valid = false;
+        var value = obj.value.trim();
 
-            if (value === '') {
-                document.getElementById(errField).innerHTML = obj.id + ' field may not be blank';
-            } else {
-                if (obj.id === 'email') {
-                    var emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                    if (!emailPattern.test(value)) {
-                        document.getElementById(errField).innerHTML = 'Invalid email format';
-                    } else {
-                        document.getElementById(errField).innerHTML = '';
-                        valid = true;
-                    }
-                } else if (obj.id === 'phone') {
-                    if (!/^\d+$/.test(value)) {
-                    document.getElementById(errField).innerHTML = 'Phone number must contain only numbers';
-                }else if (value.length !== 8) {
-                    document.getElementById(errField).innerHTML = 'Phone number must be 8 digits long';
-                }  else {
-                    document.getElementById(errField).innerHTML = '';
-                    valid = true;
-                }
+        if (value === '') {
+            document.getElementById(errField).innerHTML = obj.id + ' field may not be blank';
+        } else {
+            if (obj.id === 'email') {
+                var emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!emailPattern.test(value)) {
+                    document.getElementById(errField).innerHTML = 'Invalid email format';
                 } else {
                     document.getElementById(errField).innerHTML = '';
                     valid = true;
                 }
+            } else if (obj.id === 'phone') {
+                if (!/^\d+$/.test(value)) {
+                    document.getElementById(errField).innerHTML = 'Phone number must contain only numbers';
+                } else if (value.length !== 8) {
+                    document.getElementById(errField).innerHTML = 'Phone number must be 8 digits long';
+                } else {
+                    document.getElementById(errField).innerHTML = '';
+                    valid = true;
+                }
+            } else if (obj.id === 'password') {
+                if (value.length < 8) {
+                    document.getElementById(errField).innerHTML = 'Password must be at least 8 characters long';
+                } else if (!/[A-Z]/.test(value)) {
+                    document.getElementById(errField).innerHTML = 'Password must include at least one uppercase letter';
+                } else if (!/[a-z]/.test(value)) {
+                    document.getElementById(errField).innerHTML = 'Password must include at least one lowercase letter';
+                } else if (!/[0-9]/.test(value)) {
+                    document.getElementById(errField).innerHTML = 'Password must include at least one number';
+                } else if (!/[!@#$%^&*]/.test(value)) {
+                    document.getElementById(errField).innerHTML = 'Password must include at least one special character';
+                } else {
+                    document.getElementById(errField).innerHTML = '';
+                    valid = true;
+                }
+            } else {
+                document.getElementById(errField).innerHTML = '';
+                valid = true;
             }
-            return valid;
         }
-    </script>
+        return valid;
+    }
+</script>
+
 </head>
 <body>
     <?php include 'header.html'; ?>
