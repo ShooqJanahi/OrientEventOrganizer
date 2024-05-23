@@ -151,6 +151,8 @@ $serviceLists = isset($_POST['serviceLists']) ? $_POST['serviceLists'] : [];
                 <input type="text" id="companyName" name="companyName"><br><br>
             <?php endif; ?>
 
+            <input type="hidden" name="email" value="<?php echo htmlspecialchars($_POST['email']); ?>">
+
             <div class="form-buttons">
                 <input type="submit" value="Proceed to Checkout">
                 <input type="button" value="Cancel" onclick="window.location.href='index.php';">

@@ -123,7 +123,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['confirm_payment'])) {
     $reservationDate = date('Y-m-d');
     $timingID = 1; // Example value, update according to your logic
 
-    if (!$stmt->bind_param("sssiddiii", $reservationDate, $startDate, $endDate, $timingID, $totalPrice, $discountRate, $clientId, $hallId, $eventId)) {
+    if (!$stmt->bind_param("sssiddiii", $reservationDate, $startDate, $endDate, $timingID, $discountedPrice, $discountRate, $clientId, $hallId, $eventId)) {
         die("Bind failed: " . $stmt->error);
     }
 
