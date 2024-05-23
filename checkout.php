@@ -1,18 +1,37 @@
 <?php
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
 session_start();
 include 'Database.php';
 
-// Function to calculate discount based on client status
-function calculateDiscount($status, $totalCost) {
-    $discountRate = 0;
-    if ($status == 'Golden') {
-        $discountRate = 0.20;
-    } elseif ($status == 'Silver') {
-        $discountRate = 0.10;
-    } elseif ($status == 'Bronze') {
-        $discountRate = 0.05;
+// Calculate discount and check royalty points using stored procedure
+function calculateDiscountAndRoyalty($clientId, $totalCost) {
+    $db = Database::getInstance()->getConnection();
+
+    $stmt = $db->prepare("CALL CalculateDiscountAndRoyalty(?, ?, @discountRate, @discountedPrice, @royaltyPoints)");
+    if ($stmt === false) {
+        die("Prepare failed: " . $db->error);
     }
-    return $totalCost * (1 - $discountRate);
+
+    if (!$stmt->bind_param("id", $clientId, $totalCost)) {
+        die("Bind failed: " . $stmt->error);
+    }
+
+    if (!$stmt->execute()) {
+        die("Execute failed: " . $stmt->error);
+    }
+
+    $stmt->close();
+
+    $result = $db->query("SELECT @discountRate AS discountRate, @discountedPrice AS discountedPrice, @royaltyPoints AS royaltyPoints");
+    if ($result === false) {
+        die("Query failed: " . $db->error);
+    }
+
+    $row = $result->fetch_assoc();
+    return $row;
 }
 
 // Retrieve reservation details
@@ -28,12 +47,17 @@ $rentalDetails = $_POST['rentalDetails'];
 $totalPrice = $_POST['totalPrice'];
 $companyName = isset($_POST['companyName']) ? $_POST['companyName'] : '';
 
+// Check if the user is logged in
 $loggedIn = isset($_SESSION['userId']);
 $clientStatus = '';
 if ($loggedIn) {
     $clientStatus = $_POST['clientStatus'];
     $clientId = $_POST['clientId'];
-    $discountedPrice = calculateDiscount($clientStatus, $totalPrice);
+    // Calculate discount and royalty points
+    $calcResults = calculateDiscountAndRoyalty($clientId, $totalPrice);
+    $discountRate = $calcResults['discountRate'];
+    $discountedPrice = $calcResults['discountedPrice'];
+    $royaltyPoints = $calcResults['royaltyPoints'];
 } else {
     $clientId = '';
     $discountedPrice = $totalPrice;
@@ -147,7 +171,7 @@ $serviceLists = isset($_POST['serviceLists']) ? $_POST['serviceLists'] : [];
         <?php endforeach; ?>
 
         <div class="form-buttons">
-            <form action="payment.php" method="post">
+            <form action="Payment.php" method="post">
                 <!-- Pass reservation details -->
                 <input type="hidden" name="hallId" value="<?php echo htmlspecialchars($hallId); ?>">
                 <input type="hidden" name="hallName" value="<?php echo htmlspecialchars($hallName); ?>">
@@ -160,9 +184,11 @@ $serviceLists = isset($_POST['serviceLists']) ? $_POST['serviceLists'] : [];
                 <input type="hidden" name="rentalDetails" value="<?php echo htmlspecialchars($rentalDetails); ?>">
                 <input type="hidden" name="totalPrice" value="<?php echo htmlspecialchars($totalPrice); ?>">
                 <input type="hidden" name="discountedPrice" value="<?php echo htmlspecialchars($discountedPrice); ?>">
+                <input type="hidden" name="discountRate" value="<?php echo htmlspecialchars($discountRate); ?>"> <!-- Add discountRate -->
                 <input type="hidden" name="clientId" value="<?php echo htmlspecialchars($clientId); ?>">
                 <input type="hidden" name="clientStatus" value="<?php echo htmlspecialchars($clientStatus); ?>">
                 <input type="hidden" name="companyName" value="<?php echo htmlspecialchars($companyName); ?>">
+                <input type="hidden" name="email" value="<?php echo htmlspecialchars($userEmail); ?>">
 
                 <!-- Pass selected menus and services -->
                 <?php foreach ($selectedMenus as $index => $menuId): ?>
@@ -177,10 +203,11 @@ $serviceLists = isset($_POST['serviceLists']) ? $_POST['serviceLists'] : [];
                     <input type="hidden" name="serviceNames[]" value="<?php echo htmlspecialchars($serviceNames[$index]); ?>">
                     <input type="hidden" name="serviceLists[]" value="<?php echo htmlspecialchars($serviceLists[$index]); ?>">
                 <?php endforeach; ?>
-
-                <input type="submit" value="Proceed to Payment">
+                <div class="form-buttons">
+                    <input type="submit" value="Proceed to Payment">
+                    <input type="button" value="Cancel" onclick="window.location.href='index.php';">
+                </div>
             </form>
-            <input type="button" value="Cancel" onclick="window.location.href='index.php';">
         </div>
     </div>
 

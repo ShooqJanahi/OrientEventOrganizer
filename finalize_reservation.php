@@ -1,71 +1,148 @@
 <?php
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
 session_start();
 include 'Database.php';
-include 'Client.php';
+
+// Function to send confirmation email
+function sendConfirmationEmail($email, $reservationId, $invoiceId, $reservationSummary) {
+    $subject = "Reservation Confirmation";
+    $message = "Thank you for your reservation. Here are your details:\n\n" . 
+               "Reservation ID: $reservationId\n" . 
+               "Invoice ID: $invoiceId\n" . 
+               "$reservationSummary";
+    $headers = "From: no-reply@orienteventorganizer.com";
+
+    mail($email, $subject, $message, $headers);
+}
 
 // Retrieve payment details
-$reservationId = $_POST['reservationId'];
-$paymentType = $_POST['paymentType'];
-$cardDetails = $_POST['cardDetails'];
-$cardHolderName = $_POST['cardHolderName'];
-$billingAddress = $_POST['billingAddress'];
-$discountedPrice = $_POST['discountedPrice'];
-$clientId = $_POST['clientId'];
+$reservationId = $_GET['reservationId'];
+$invoiceId = $_GET['invoiceId'];
+$db = Database::getInstance();
 
-// Insert payment details into the database
-try {
-    $db = Database::getInstance();
-    
-    // Start transaction
-    $db->beginTransaction();
+$sql = "SELECT * FROM dpProj_Inovice WHERE invoiceId = ?";
+$stmt = $db->prepare($sql);
+$stmt->bind_param('i', $invoiceId);
+$stmt->execute();
+$result = $stmt->get_result();
+$invoice = $result->fetch_object();
 
-    $paymentQuery = "INSERT INTO dpProj_Payment (paymentType, cardDetails, cardHolderName, billingAddress, reservationId) VALUES (?, ?, ?, ?, ?)";
-    $db->querySQL($paymentQuery, [$paymentType, $cardDetails, $cardHolderName, $billingAddress, $reservationId]);
-    $paymentId = $db->getLastInsertId();
+$sql_payment = "SELECT * FROM dpProj_Payment WHERE paymentId = ?";
+$stmt_payment = $db->prepare($sql_payment);
+$stmt_payment->bind_param('i', $invoice->paymentId);
+$stmt_payment->execute();
+$result_payment = $stmt_payment->get_result();
+$payment = $result_payment->fetch_object();
 
-    // Insert invoice details
-    $invoiceQuery = "INSERT INTO dpProj_Invoice (amount, date, paymentId) VALUES (?, ?, ?)";
-    $invoiceDate = date('Y-m-d');
-    $db->querySQL($invoiceQuery, [$discountedPrice, $invoiceDate, $paymentId]);
+$sql_reservation = "SELECT * FROM dbProj_Reservation WHERE reservationId = ?";
+$stmt_reservation = $db->prepare($sql_reservation);
+$stmt_reservation->bind_param('i', $payment->reservationId);
+$stmt_reservation->execute();
+$result_reservation = $stmt_reservation->get_result();
+$reservation = $result_reservation->fetch_object();
 
-    // Commit transaction
-    $db->commit();
-    
-    // Update royalty points and client status if user is logged in
-    if (isset($_SESSION['userId'])) {
-        $clientId = $_SESSION['userId'];
-        $client = new Client();
-        $user = $client->initWithClientId($clientId);
-        $currentPoints = $client->getRoyaltyPoints();
-        $newPoints = $currentPoints + 1;
-        $clientStatus = $client->getClientStatus();
+// Assuming you have the user's email stored in the payment table
+$userEmail = $payment->cardHolderName; // Adjust this if the email is stored elsewhere
 
-        if ($newPoints > 15) {
-            $clientStatus = 'Golden';
-        } elseif ($newPoints > 10) {
-            $clientStatus = 'Silver';
-        } elseif ($newPoints > 5) {
-            $clientStatus = 'Bronze';
-        }
+// Prepare reservation summary
+$reservationSummary = "Amount: {$invoice->amount} BD\n" . 
+                      "Date: {$invoice->date}\n" . 
+                      "Payment Type: {$payment->paymentType}\n" . 
+                      "Card Holder Name: {$payment->cardHolderName}\n" . 
+                      "Billing Address: {$payment->billingAddress}\n";
 
-        $client->setRoyaltyPoints($newPoints);
-        $client->setClientStatus($clientStatus);
-        $client->updateClientDB();
+// Send confirmation email
+sendConfirmationEmail($userEmail, $reservationId, $invoiceId, $reservationSummary);
 
-        // Send confirmation email
-        $to = $user->getEmail();
-        $subject = "Reservation Confirmation";
-        $message = "Dear " . $user->getFirstName() . " " . $user->getLastName() . ",\n\nYour reservation has been confirmed. Your reservation ID is " . $reservationId . ".\n\nThank you for choosing our service.";
-        $headers = "From: no-reply@example.com";
-
-        mail($to, $subject, $message, $headers);
-    }
-
-    echo "Connected successfully to the database.";
-
-} catch (Exception $e) {
-    // Rollback transaction on error
-    $db->rollback();
-    echo "Error: " . $e->getMessage();
-}
 ?>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Reservation Summary</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 0;
+            min-height: 100vh;
+            background-color: white;
+            color: black;
+        }
+        .container {
+            text-align: center;
+            max-width: 800px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        .form-buttons input {
+            padding: 10px 20px;
+            margin-right: 10px;
+            background-color: black;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-transform: uppercase;
+        }
+        .form-buttons input:hover {
+            background-color: red;
+            color: white;
+        }
+        .form-buttons {
+            margin-top: 20px;
+        }
+        .form-buttons form {
+            display: inline-block;
+        }
+        header, footer {
+            width: 100%;
+            background-color: #f8f8f8;
+            padding: 10px 0;
+        }
+        footer {
+            margin-top: auto;
+        }
+        h1 {
+            font-size: 2em;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        p, h2, h3 {
+            color: black; /* Ensure all text remains black */
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <?php include 'header.html'; ?>
+    </header>
+
+    <div class="container">
+        <h1>Invoice</h1>
+        <p>Thank you for your reservation. Here are your details:</p>
+        <p>Invoice ID: <?php echo htmlspecialchars($invoice->invoiceId); ?></p>
+        <p>Amount: <?php echo htmlspecialchars($invoice->amount); ?> BD</p>
+        <p>Date: <?php echo htmlspecialchars($invoice->date); ?></p>
+        <p>Reservation ID: <?php echo htmlspecialchars($reservation->reservationId); ?></p>
+        <p>Payment Type: <?php echo htmlspecialchars($payment->paymentType); ?></p>
+        <p>Card Holder Name: <?php echo htmlspecialchars($payment->cardHolderName); ?></p>
+        <p>Billing Address: <?php echo htmlspecialchars($payment->billingAddress); ?></p>
+        <div class="form-buttons">
+            <input type="button" value="Back to Home" onclick="window.location.href='index.php';">
+        </div>
+    </div>
+
+    <footer>
+        <?php include 'footer.html'; ?>
+    </footer>
+</body>
+</html>

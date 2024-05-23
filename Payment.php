@@ -1,72 +1,209 @@
 <?php
-session_start();
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
 include 'Database.php';
-include 'Client.php';
 
-// Retrieve reservation details
-$hallId = $_POST['hallId'];
-$hallName = $_POST['hallName'];
-$startDate = $_POST['start_date'];
-$duration = $_POST['duration'];
-$endDate = $_POST['end_date'];
-$audience = $_POST['audience'];
-$time = $_POST['time'];
-$hallImage = $_POST['hallImage'];
-$rentalDetails = $_POST['rentalDetails'];
-$totalPrice = $_POST['totalPrice'];
-$discountedPrice = $_POST['discountedPrice'];
-$clientId = isset($_POST['clientId']) ? $_POST['clientId'] : null;
-$clientStatus = isset($_POST['clientStatus']) ? $_POST['clientStatus'] : null;
-$companyName = $_POST['companyName'];
+// Function to send confirmation email
+function sendConfirmationEmail($email, $reservationId, $reservationSummary) {
+    $subject = "Reservation Confirmation";
+    $message = "Thank you for your reservation. Your reservation ID is: $reservationId\n\n$reservationSummary";
+    $headers = "From: no-reply@orienteventorganizer.com";
 
-// Insert event and reservation details into the database
-$db = Database::getInstance();
-
-// Insert event
-$eventType = '';
-if (strpos($hallName, 'Seminar Hall') !== false) {
-    $eventType = 'Seminar';
-} elseif (strpos($hallName, 'Small Hall') !== false) {
-    $eventType = 'Workshop';
-} elseif (strpos($hallName, 'Lab') !== false) {
-    $eventType = 'Training';
-}
-$eventQuery = "INSERT INTO dbProj_event (eventType, numberOfAudiance, numberOFDays) VALUES (?, ?, ?)";
-$db->querySQL($eventQuery, [$eventType, $audience, $duration]);
-$eventId = $db->getLastInsertId();
-echo "Event ID: $eventId<br>"; // Debugging line
-
-// Get timing ID based on hallId and time
-$timingQuery = "SELECT timingID FROM dpProj_HallsTimingSlots WHERE hallId = ? AND timingSlotStart <= ? AND timingSlotEnd >= ?";
-$timingResult = $db->singleFetch($timingQuery, [$hallId, $time, $time]);
-if ($timingResult) {
-    $timingID = $timingResult->timingID;
-} else {
-    die('Error: Invalid timing ID.');
+    mail($email, $subject, $message, $headers);
 }
 
-// Calculate discount rate
-$client = new Client();
-$client->initWithClientId($clientId);
-$royaltyPoints = $client->getRoyaltyPoints();
-$discountRate = 0;
-if ($royaltyPoints > 15) {
-    $discountRate = 0.20;
-} elseif ($royaltyPoints > 10) {
-    $discountRate = 0.10;
-} elseif ($royaltyPoints > 5) {
-    $discountRate = 0.05;
-}
+// Handle form submission
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['confirm_payment'])) {
+    $db = Database::getInstance()->getConnection();
 
-// Insert reservation
-$reservationDate = date('Y-m-d');
-$reservationQuery = "INSERT INTO dbProj_Reservation (reservationDate, startDate, endDate, timingID, totalCost, discountRate, clientId, hallId, eventId) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
-$db->querySQL($reservationQuery, [$reservationDate, $startDate, $endDate, $timingID, $totalPrice, $discountRate, $clientId, $hallId, $eventId]);
-$reservationId = $db->getLastInsertId();
-if ($reservationId) {
-    echo "Reservation ID: $reservationId<br>"; // Debugging line
-} else {
-    die('Error: Reservation not created.');
+    // Retrieve reservation details
+    $hallId = $_POST['hallId'];
+    $hallName = $_POST['hallName'];
+    $startDate = $_POST['start_date'];
+    $duration = $_POST['duration'];
+    $endDate = $_POST['end_date'];
+    $audience = $_POST['audience'];
+    $time = $_POST['time'];
+    $hallImage = $_POST['hallImage'];
+    $rentalDetails = $_POST['rentalDetails'];
+    $totalPrice = $_POST['totalPrice'];
+    $discountedPrice = $_POST['discountedPrice'];
+    $discountRate = $_POST['discountRate']; // Get discountRate from POST
+    $clientId = isset($_POST['clientId']) ? $_POST['clientId'] : null;
+    $clientStatus = isset($_POST['clientStatus']) ? $_POST['clientStatus'] : null;
+    $companyName = $_POST['companyName'];
+    $email = $_POST['email'];
+
+    // Payment details
+    $paymentType = $_POST['paymentType'];
+    $cardDetails = $_POST['cardDetails'];
+    $cardHolderName = $_POST['cardHolderName'];
+    $billingAddress = $_POST['billingAddress'];
+
+    // Check if clientId exists in dbProj_Client
+    $clientExistsQuery = "SELECT COUNT(*) FROM dbProj_Client WHERE clientId = ?";
+    $stmt = $db->prepare($clientExistsQuery);
+    if ($stmt === false) {
+        die("Prepare failed: " . $db->error);
+    }
+
+    $stmt->bind_param("i", $clientId);
+    $stmt->execute();
+    $stmt->bind_result($clientExists);
+    $stmt->fetch();
+    $stmt->close();
+
+    if ($clientExists == 0) {
+        die("Client ID does not exist in dbProj_Client.");
+    }
+
+    // Insert event
+    $eventType = '';
+    if (strpos($hallName, 'Seminar Hall') !== false) {
+        $eventType = 'Seminar';
+    } elseif (strpos($hallName, 'Small Hall') !== false) {
+        $eventType = 'Workshop';
+    } elseif (strpos($hallName, 'Lab') !== false) {
+        $eventType = 'Training';
+    }
+    $numberOfAudiance = $audience;
+    $numberOfDays = $duration;
+
+    // Insert event details into the database
+    $stmt = $db->prepare("INSERT INTO dbProj_event (eventType, numberOfAudiance, numberOFDays) VALUES (?, ?, ?)");
+    if ($stmt === false) {
+        die("Prepare failed: " . $db->error);
+    }
+
+    if (!$stmt->bind_param("sii", $eventType, $numberOfAudiance, $numberOfDays)) {
+        die("Bind failed: " . $stmt->error);
+    }
+
+    if (!$stmt->execute()) {
+        die("Execute failed: " . $stmt->error);
+    }
+
+    $eventId = $stmt->insert_id; // Get the inserted event ID
+    $stmt->close();
+
+    $reservationDate = date('Y-m-d');
+    // Get timing ID based on hallId and time
+    $timingQuery = "SELECT timingID FROM dpProj_HallsTimingSlots WHERE hallId = ? AND timingSlotStart <= ? AND timingSlotEnd >= ?";
+    $stmt = $db->prepare($timingQuery);
+    if ($stmt === false) {
+        die("Prepare failed: " . $db->error);
+    }
+
+    $stmt->bind_param("iss", $hallId, $time, $time);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    if ($result->num_rows > 0) {
+        $row = $result->fetch_assoc();
+        $timingID = $row['timingID'];
+    } else {
+        die('Error: Invalid timing ID.');
+    }
+    $stmt->close();
+
+    // Insert reservation details into the database
+    $stmt = $db->prepare("INSERT INTO dbProj_Reservation (reservationDate, startDate, endDate, timingID, totalCost, discountRate, clientId, hallId, eventId) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+    if ($stmt === false) {
+        die("Prepare failed: " . $db->error);
+    }
+
+    if (!$stmt->bind_param("sssiddiii", $reservationDate, $startDate, $endDate, $timingID, $discountedPrice, $discountRate, $clientId, $hallId, $eventId)) {
+        die("Bind failed: " . $stmt->error);
+    }
+
+    if (!$stmt->execute()) {
+        die("Execute failed: " . $stmt->error);
+    }
+
+    $reservationId = $stmt->insert_id; // Get the inserted reservation ID
+    $stmt->close();
+
+    // Insert catering details into the database if menus or services were selected
+    $stmt = $db->prepare("INSERT INTO dbProj_Catering (reservationId, menuId, packageId) VALUES (?, ?, ?)");
+    if ($stmt === false) {
+        die("Prepare failed: " . $db->error);
+    }
+
+    foreach ($_POST['selectedMenus'] as $menuId) {
+        if ($menuId != '') {
+            $packageId = null; // No service package in this case
+
+            if (!$stmt->bind_param("iii", $reservationId, $menuId, $packageId)) {
+                die("Bind failed: " . $stmt->error);
+            }
+
+            if (!$stmt->execute()) {
+                die("Execute failed: " . $stmt->error);
+            }
+        }
+    }
+
+    foreach ($_POST['selectedServices'] as $packageId) {
+        if ($packageId != '') {
+            $menuId = null; // No menu in this case
+
+            if (!$stmt->bind_param("iii", $reservationId, $menuId, $packageId)) {
+                die("Bind failed: " . $stmt->error);
+            }
+
+            if (!$stmt->execute()) {
+                die("Execute failed: " . $stmt->error);
+            }
+        }
+    }
+
+    $stmt->close();
+
+    // Insert payment details into the database
+    $stmt = $db->prepare("INSERT INTO dpProj_Payment (paymentType, cardDetails, cardHolderName, billingAddress, reservationId) VALUES (?, ?, ?, ?, ?)");
+    if ($stmt === false) {
+        die("Prepare failed: " . $db->error);
+    }
+
+    if (!$stmt->bind_param("ssssi", $paymentType, $cardDetails, $cardHolderName, $billingAddress, $reservationId)) {
+        die("Bind failed: " . $stmt->error);
+    }
+
+    if (!$stmt->execute()) {
+        die("Execute failed: " . $stmt->error);
+    }
+
+    $paymentId = $stmt->insert_id;
+    $stmt->close();
+
+    // Create invoice
+    $stmt = $db->prepare("INSERT INTO dpProj_Inovice (amount, date, paymentId) VALUES (?, ?, ?)");
+    if ($stmt === false) {
+        die("Prepare failed: " . $db->error);
+    }
+
+    $amount = $discountedPrice;
+    $date = date('Y-m-d');
+
+    if (!$stmt->bind_param("dsi", $amount, $date, $paymentId)) {
+        die("Bind failed: " . $stmt->error);
+    }
+
+    if (!$stmt->execute()) {
+        die("Execute failed: " . $stmt->error);
+    }
+    $invoiceId = $stmt->insert_id;
+    $stmt->close();
+
+    // Send confirmation email
+    $reservationSummary = "Hall Name: $hallName\nStart Date: $startDate\nEnd Date: $endDate\nDuration: $duration days\nNumber of Audience: $audience\nTime: $time\nRental Details: $rentalDetails BD\nTotal Price: $totalPrice BD\nDiscounted Price: $discountedPrice BD\nCompany Name: $companyName";
+    sendConfirmationEmail($email, $reservationId, $reservationSummary);
+
+    
+    header('Location: finalize_reservation.php?reservationId=' . $reservationId . '&invoiceId=' . $invoiceId);
+
+    exit();
 }
 ?>
 
@@ -139,21 +276,46 @@ if ($reservationId) {
 
     <div class="container">
         <h1>Payment</h1>
-        <form action="finalize_reservation.php" method="post">
+        <h2>Reservation Summary</h2>
+        <p>Total Price: <?php echo htmlspecialchars($_POST['discountedPrice']); ?> BD</p>
+
+        <form action="Payment.php" method="post">
             <label for="paymentType">Payment Type:</label>
-            <input type="text" id="paymentType" name="paymentType" required><br><br>
+            <input type="text" name="paymentType" required><br>
+
             <label for="cardDetails">Card Details:</label>
-            <input type="text" id="cardDetails" name="cardDetails" required><br><br>
+            <input type="text" name="cardDetails" required><br>
+
             <label for="cardHolderName">Card Holder Name:</label>
-            <input type="text" id="cardHolderName" name="cardHolderName" required><br><br>
+            <input type="text" name="cardHolderName" required><br>
+
             <label for="billingAddress">Billing Address:</label>
-            <input type="text" id="billingAddress" name="billingAddress" required><br><br>
+            <input type="text" name="billingAddress" required><br>
 
             <!-- Pass reservation details -->
-            <input type="hidden" name="reservationId" value="<?php echo htmlspecialchars($reservationId); ?>">
-            <input type="hidden" name="discountedPrice" value="<?php echo htmlspecialchars($discountedPrice); ?>">
-            
-            <input type="submit" value="Confirm Payment">
+            <input type="hidden" name="hallId" value="<?php echo htmlspecialchars($_POST['hallId']); ?>">
+            <input type="hidden" name="hallName" value="<?php echo htmlspecialchars($_POST['hallName']); ?>">
+            <input type="hidden" name="start_date" value="<?php echo htmlspecialchars($_POST['start_date']); ?>">
+            <input type="hidden" name="duration" value="<?php echo htmlspecialchars($_POST['duration']); ?>">
+            <input type="hidden" name="end_date" value="<?php echo htmlspecialchars($_POST['end_date']); ?>">
+            <input type="hidden" name="audience" value="<?php echo htmlspecialchars($_POST['audience']); ?>">
+            <input type="hidden" name="time" value="<?php echo htmlspecialchars($_POST['time']); ?>">
+            <input type="hidden" name="hallImage" value="<?php echo htmlspecialchars($_POST['hallImage']); ?>">
+            <input type="hidden" name="rentalDetails" value="<?php echo htmlspecialchars($_POST['rentalDetails']); ?>">
+            <input type="hidden" name="totalPrice" value="<?php echo htmlspecialchars($_POST['totalPrice']); ?>">
+            <input type="hidden" name="discountedPrice" value="<?php echo htmlspecialchars($_POST['discountedPrice']); ?>">
+            <input type="hidden" name="discountRate" value="<?php echo htmlspecialchars($_POST['discountRate']); ?>"> <!-- Add discountRate -->
+            <input type="hidden" name="clientId" value="<?php echo htmlspecialchars($_POST['clientId']); ?>">
+            <input type="hidden" name="clientStatus" value="<?php echo htmlspecialchars($_POST['clientStatus']); ?>">
+            <input type="hidden" name="companyName" value="<?php echo htmlspecialchars($_POST['companyName']); ?>">
+            <input type="hidden" name="email" value="<?php echo htmlspecialchars($_POST['email']); ?>">
+            <input type="hidden" name="selectedMenus" value="<?php echo htmlspecialchars($_POST['selectedMenus']); ?>">
+            <input type="hidden" name="selectedServices" value="<?php echo htmlspecialchars($_POST['selectedServices']); ?>">
+
+            <div class="form-buttons">
+                <input type="submit" name="confirm_payment" value="Confirm Payment">
+                <input type="button" value="Cancel" onclick="window.location.href='index.php';">
+            </div>
         </form>
     </div>
 

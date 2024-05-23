@@ -1,7 +1,7 @@
 <?php
 session_start();
 include 'Database.php';
-include 'Client.php';
+//include 'Client.php';
 
 // Check if the user is logged in
 $loggedIn = isset($_SESSION['userId']);
@@ -9,19 +9,31 @@ $userEmail = '';
 $clientId = '';
 $clientStatus = '';
 
+
+
 // Fetch user details if logged in
 if ($loggedIn) {
     $userId = $_SESSION['userId'];
     $db = Database::getInstance();
+    
+    // Fetch the email of the logged-in user
     $userQuery = "SELECT email FROM dbProj_User WHERE userId = ?";
     $userDetails = $db->singleFetch($userQuery, [$userId]);
-    $userEmail = $userDetails->email;
+    if ($userDetails) {
+        $userEmail = $userDetails->email;
+    } else {
+        die('Error: Could not fetch user email.');
+    }
 
     // Fetch client details
     $clientQuery = "SELECT clientId, clientStatus FROM dbProj_Client WHERE userId = ?";
     $clientDetails = $db->singleFetch($clientQuery, [$userId]);
-    $clientId = $clientDetails->clientId;
-    $clientStatus = $clientDetails->clientStatus;
+    if ($clientDetails) {
+        $clientId = $clientDetails->clientId;
+        $clientStatus = $clientDetails->clientStatus;
+    } else {
+        die('Error: Could not fetch client details.');
+    }
 }
 
 // Get selected services and menus from POST
@@ -148,6 +160,7 @@ $serviceLists = isset($_POST['serviceLists']) ? $_POST['serviceLists'] : [];
                 <label for="companyName">Company Name:</label>
                 <input type="text" id="companyName" name="companyName"><br><br>
             <?php endif; ?>
+		 <input type="hidden" name="email" value="<?php echo htmlspecialchars($_POST['email']); ?>">
 
             <div class="form-buttons">
                 <input type="submit" value="Proceed to Checkout">
@@ -161,3 +174,4 @@ $serviceLists = isset($_POST['serviceLists']) ? $_POST['serviceLists'] : [];
     </footer>
 </body>
 </html>
+
