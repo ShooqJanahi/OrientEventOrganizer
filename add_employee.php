@@ -3,34 +3,70 @@ include 'debugging.php';
 require_once 'Employee.php'; // Ensure this path is correct
 require_once 'Users.php';    // Ensure this path is correct
 
-if (isset($_POST['submitted'])) {
-    // Create and register the user
-    $user = new Users();
-    $user->setFirstName($_POST['firstName']);
-    $user->setLastName($_POST['lastName']);
-    $user->setUsername($_POST['username']);
-    $user->setUserType('Employee'); // Assuming all employees have the userType 'Employee'
-    $user->setPassword($_POST['password']);
-    $user->setEmail($_POST['email']);
-    $user->setPhoneNumber($_POST['phoneNumber']);
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submitted'])) {
+    // Sanitize input data
+    $firstName = filter_input(INPUT_POST, 'firstName', FILTER_SANITIZE_STRING);
+    $lastName = filter_input(INPUT_POST, 'lastName', FILTER_SANITIZE_STRING);
+    $username = filter_input(INPUT_POST, 'username', FILTER_SANITIZE_STRING);
+    $password = filter_input(INPUT_POST, 'password', FILTER_SANITIZE_STRING);
+    $email = filter_input(INPUT_POST, 'email', FILTER_SANITIZE_EMAIL);
+    $phoneNumber = filter_input(INPUT_POST, 'phoneNumber', FILTER_SANITIZE_STRING);
+    $department = filter_input(INPUT_POST, 'department', FILTER_SANITIZE_STRING);
+    $position = filter_input(INPUT_POST, 'position', FILTER_SANITIZE_STRING);
+    $joinDate = filter_input(INPUT_POST, 'joinDate', FILTER_SANITIZE_STRING);
 
-    if ($user->registerUser()) {
-        // User registered successfully, now register the employee
-        $employee = new Employee();
-        $employee->setUserId($user->getUserId());
-        $employee->setDepartment($_POST['department']);
-        $employee->setPosition($_POST['position']);
-        $employee->setJoinDate($_POST['joinDate']);
+    // Basic validation
+    $errors = [];
+    if (empty($firstName)) $errors[] = 'First name is required.';
+    if (empty($lastName)) $errors[] = 'Last name is required.';
+    if (empty($username)) $errors[] = 'Username is required.';
+    if (empty($password)) $errors[] = 'Password is required.';
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) $errors[] = 'Invalid email format.';
+    if (empty($phoneNumber)) $errors[] = 'Phone number is required.';
+    if (empty($department)) $errors[] = 'Department is required.';
+    if (empty($position)) $errors[] = 'Position is required.';
+    if (empty($joinDate)) $errors[] = 'Join date is required.';
 
-        if ($employee->registerEmployee()) {
-            echo 'Employee added successfully';
+    if (empty($errors)) {
+        // Create and register the user
+        $user = new Users();
+        $user->setFirstName($firstName);
+        $user->setLastName($lastName);
+        $user->setUsername($username);
+        $user->setUserType('Employee'); // Assuming all employees have the userType 'Employee'
+        $user->setPassword($password);
+        $user->setEmail($email);
+        $user->setPhoneNumber($phoneNumber);
+
+        if ($user->registerUser()) {
+            // Log user registration success
+            error_log("User registered successfully: username = " . $username);
+            
+            // User registered successfully, now register the employee
+            $employee = new Employee();
+            $employee->setUserId($user->getUserId());
+            $employee->setDepartment($department);
+            $employee->setPosition($position);
+            $employee->setJoinDate($joinDate);
+
+            if ($employee->registerEmployee()) {
+                // Log employee registration success
+                error_log("Employee registered successfully: userId = " . $user->getUserId());
+                echo 'Employee added successfully';
+            } else {
+                // Log a generic error message
+                error_log("Error registering employee for userId: " . $user->getUserId());
+                echo '<p class="error">Error adding employee. Please check the logs for details.</p>';
+            }
         } else {
-            error_log("Error adding employee: " . $employee->getLastError());
-            echo '<p class="error">Error adding employee. Please check the logs for details.</p>';
+            // Log a generic error message
+            error_log("Error registering user with username: " . $username);
+            echo '<p class="error">Error adding user. Please check the logs for details.</p>';
         }
     } else {
-        error_log("Error adding user: " . $user->getLastError());
-        echo '<p class="error">Error adding user. Please check the logs for details.</p>';
+        foreach ($errors as $error) {
+            echo '<p class="error">' . htmlspecialchars($error) . '</p>';
+        }
     }
 }
 
@@ -71,4 +107,3 @@ include 'header.html';
 <?php
 include 'footer.html';
 ?>
-
