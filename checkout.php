@@ -184,14 +184,12 @@ $serviceLists = isset($_POST['serviceLists']) ? $_POST['serviceLists'] : [];
                 <input type="hidden" name="rentalDetails" value="<?php echo htmlspecialchars($rentalDetails); ?>">
                 <input type="hidden" name="totalPrice" value="<?php echo htmlspecialchars($totalPrice); ?>">
                 <input type="hidden" name="discountedPrice" value="<?php echo htmlspecialchars($discountedPrice); ?>">
+                <input type="hidden" name="discountRate" value="<?php echo htmlspecialchars($discountRate); ?>"> <!-- Add discountRate -->
                 <input type="hidden" name="clientId" value="<?php echo htmlspecialchars($clientId); ?>">
                 <input type="hidden" name="clientStatus" value="<?php echo htmlspecialchars($clientStatus); ?>">
                 <input type="hidden" name="companyName" value="<?php echo htmlspecialchars($companyName); ?>">
-                <input type="hidden" name="email" value="<?php echo htmlspecialchars($userEmail); ?>"> <!-- Added email -->
-              
-               
-               
-               
+                <input type="hidden" name="email" value="<?php echo htmlspecialchars($userEmail); ?>">
+
                 <!-- Pass selected menus and services -->
                 <?php foreach ($selectedMenus as $index => $menuId): ?>
                     <input type="hidden" name="selectedMenus[]" value="<?php echo htmlspecialchars($menuId); ?>">

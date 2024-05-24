@@ -1,11 +1,14 @@
-
 <?php
+
 session_start();
+
 ?>
 
-<!-- header.html -->
-<!-- basic -->
-<meta charset="utf-8">
+
+<html>
+    <head>
+        <title></title>
+               <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- mobile metas -->
@@ -28,7 +31,9 @@ session_start();
 <link rel="stylesheet" href="css/jquery.mCustomScrollbar.min.css">
 <!-- Tweaks for older IEs-->
 <link rel="stylesheet" href="https://netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css">
-<style>
+
+    
+        <style>
             /* Dropdown menu styles */
             .nav-item ul {
                 display: none;
@@ -70,6 +75,11 @@ session_start();
                 background-color: #f1f1f1;
             }
         </style>
+    </head>
+    <body>
+        
+        
+
 
 <div class="header_section header_bg">
     <div class="container">
@@ -143,3 +153,7 @@ session_start();
         </nav>
     </div>
 </div>
+        
+        
+    </body>
+</html>

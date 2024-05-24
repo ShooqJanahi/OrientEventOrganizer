@@ -177,7 +177,7 @@ function convertTo12HourFormat($time) {
     </script>
 </head>
 <body>
-    <?php include 'header.html'; ?>
+    <?php include 'header.php'; ?>
 
     <div class="search_section layout_padding">
         <div class="container">

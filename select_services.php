@@ -243,30 +243,80 @@
                 <div class="details"></div>
             </div>
         </div>
-        <div>
-            <h2>Service Packages</h2>
-            <div class="service-option">
-                <label>
-                    <input type="checkbox" data-service-id="1" data-price="150">
-                    <span>Decor and Theme Design - 150 BD per hour</span>
-                </label>
-                <div class="details"></div>
-            </div>
-            <div class="service-option">
-                <label>
-                    <input type="checkbox" data-service-id="2" data-price="100">
-                    <span>Audiovisual Equipment Rental - 100 BD per hour</span>
-                </label>
-                <div class="details"></div>
-            </div>
-            <div class="service-option">
-                <label>
-                    <input type="checkbox" data-service-id="3" data-price="120">
-                    <span>Event Photography and Videography - 120 BD per hour</span>
-                </label>
-                <div class="details"></div>
-            </div>
-        </div>
+      <div>
+    <h2>Service Packages</h2>
+    <div class="service-option">
+        <label>
+            <input type="checkbox" data-service-id="1" data-price="150">
+            <span>Decor and Theme Design - 150 BD per hour</span>
+        </label>
+        <div class="details"></div>
+    </div>
+    <div class="service-option">
+        <label>
+            <input type="checkbox" data-service-id="2" data-price="100">
+            <span>Audiovisual Equipment Rental - 100 BD per hour</span>
+        </label>
+        <div class="details"></div>
+    </div>
+    <div class="service-option">
+        <label>
+            <input type="checkbox" data-service-id="3" data-price="120">
+            <span>Event Photography and Videography - 120 BD per hour</span>
+        </label>
+        <div class="details"></div>
+    </div>
+    <div class="service-option">
+        <label>
+            <input type="checkbox" data-service-id="4" data-price="200">
+            <span>Catering Services - 200 BD per hour</span>
+        </label>
+        <div class="details"></div>
+    </div>
+    <div class="service-option">
+        <label>
+            <input type="checkbox" data-service-id="5" data-price="250">
+            <span>Transportation Services - 250 BD per hour</span>
+        </label>
+        <div class="details"></div>
+    </div>
+    <div class="service-option">
+        <label>
+            <input type="checkbox" data-service-id="6" data-price="180">
+            <span>Security Services - 180 BD per hour</span>
+        </label>
+        <div class="details"></div>
+    </div>
+    <div class="service-option">
+        <label>
+            <input type="checkbox" data-service-id="7" data-price="300">
+            <span>Entertainment Services - 300 BD per hour</span>
+        </label>
+        <div class="details"></div>
+    </div>
+    <div class="service-option">
+        <label>
+            <input type="checkbox" data-service-id="8" data-price="140">
+            <span>Lighting and Sound - 140 BD per hour</span>
+        </label>
+        <div class="details"></div>
+    </div>
+    <div class="service-option">
+        <label>
+            <input type="checkbox" data-service-id="9" data-price="400">
+            <span>VIP Services - 400 BD per hour</span>
+        </label>
+        <div class="details"></div>
+    </div>
+    <div class="service-option">
+        <label>
+            <input type="checkbox" data-service-id="10" data-price="500">
+            <span>Event Planning - 500 BD per hour</span>
+        </label>
+        <div class="details"></div>
+    </div>
+</div>
+
         <div id="total-price">
             <p>Total Price: 0 BD</p>
         </div>
